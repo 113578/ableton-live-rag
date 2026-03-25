@@ -17,6 +17,7 @@ dependencies = [
     "rich>=13.9",
     "pydantic-settings>=2.7",
     "python-dotenv>=1.0",
+    "dvc>=3.67.0",
 ]
 
 [project.scripts]
