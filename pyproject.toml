@@ -1,6 +1,6 @@
 [project]
 name = "ableton-live-rag"
-version = "0.1.0"
+version = "0.0.0"
 description = "RAG-система для документации Ableton Live 12"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -29,6 +29,42 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "prek>=0.3.8",
+    "python-semantic-release>=10.5.3",
     "ruff>=0.15.7",
     "ty>=0.0.25",
+]
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+commit_parser = "conventional"
+branch = "main"
+commit_message = "chore(release): v{version}"
+allow_zero_version = true
+build_command = """
+    uv lock --upgrade-package "$PACKAGE_NAME"
+    git add uv.lock
+    uv build
+"""
+
+[tool.semantic_release.remote]
+type = "github"
+
+[tool.semantic_release.commit_parser_options]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf"]
+parse_squash_commits = true
+ignore_merge_commits = true
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    '''chore(?:\([^)]*?\))?: .+''',
+    '''ci(?:\([^)]*?\))?: .+''',
+    '''refactor(?:\([^)]*?\))?: .+''',
+    '''style(?:\([^)]*?\))?: .+''',
+    '''test(?:\([^)]*?\))?: .+''',
+    '''build\((?!deps\): .+)''',
+    '''Initial [Cc]ommit.*''',
 ]
