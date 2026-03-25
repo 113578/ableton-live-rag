@@ -1,0 +1,27 @@
+[project]
+name = "ableton-live-docs-rag"
+version = "0.1.0"
+description = "RAG-система для документации Ableton Live 12"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pymupdf>=1.25",
+    "llama-index-core>=0.10.0",
+    "llama-index-vector-stores-qdrant>=0.2.0",
+    "llama-index-embeddings-huggingface>=0.2.0",
+    "llama-index-llms-ollama>=0.1.0",
+    "llama-index-llms-openai>=0.1.0",
+    "llama-index-retrievers-bm25>=0.2.0",
+    "qdrant-client>=1.12",
+    "typer[all]>=0.15",
+    "rich>=13.9",
+    "pydantic-settings>=2.7",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+rag = "ableton_live_docs_rag.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
