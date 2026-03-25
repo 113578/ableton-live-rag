@@ -1,0 +1,9 @@
+schema: '2.0'
+stages:
+  download_corpus:
+    cmd: bash scripts/download_corpus.sh corpus.pdf
+    outs:
+    - path: corpus.pdf
+      hash: md5
+      md5: 35cce01f5372cec02c860b58b42e2ca3
+      size: 87585316
