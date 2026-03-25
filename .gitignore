@@ -10,5 +10,6 @@ wheels/
 .venv
 
 # Project data
+.env
 data/
 eval_results/
