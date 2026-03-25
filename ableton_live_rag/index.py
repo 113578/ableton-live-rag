@@ -4,7 +4,7 @@
 
 from llama_index.core import Document, StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import TextNode
+from llama_index.core.schema import BaseNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 
@@ -105,7 +105,7 @@ def load_index() -> VectorStoreIndex:
         ) from e
 
 
-def parse_nodes(documents: list[Document]) -> list[TextNode]:
+def parse_nodes(documents: list[Document]) -> list[BaseNode]:
     """
     Разбивка документов на чанки с помощью SentenceSplitter.
 
@@ -116,7 +116,7 @@ def parse_nodes(documents: list[Document]) -> list[TextNode]:
 
     Returns
     -------
-    list[TextNode]
+    list[BaseNode]
         Список чанков.
     """
 
@@ -135,7 +135,7 @@ def get_stats() -> dict:
     Returns
     -------
     dict
-        Словарь с ключами ``collection``, ``points_count``, ``vectors_count``, ``status``.
+        Словарь с ключами ``collection``, ``points_count``, ``indexed_vectors_count``, ``status``.
     """
 
     client = _get_qdrant_client()
@@ -145,7 +145,7 @@ def get_stats() -> dict:
         return {
             "collection": settings.collection_name,
             "points_count": info.points_count,
-            "vectors_count": info.vectors_count,
+            "indexed_vectors_count": info.indexed_vectors_count,
             "status": info.status.value,
         }
     except Exception:

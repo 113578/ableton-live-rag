@@ -3,11 +3,15 @@
 """
 
 from dataclasses import dataclass, field
-from typing import Generator
+from typing import Generator, cast
 
-from llama_index.core import RichPromptTemplate
+from llama_index.core.prompts import RichPromptTemplate
+from llama_index.core.base.response.schema import StreamingResponse
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.core.response_synthesizers import get_response_synthesizer
+from llama_index.core.response_synthesizers import (
+    ResponseMode,
+    get_response_synthesizer,
+)
 from llama_index.core.retrievers import VectorIndexRetriever
 
 from ableton_live_rag import index as idx
@@ -108,7 +112,7 @@ def _build_query_engine(similarity_top_k: int) -> RetrieverQueryEngine:
     )
 
     response_synthesizer = get_response_synthesizer(
-        response_mode="compact",
+        response_mode=ResponseMode.COMPACT,
         streaming=True,
         text_qa_template=_TEXT_QA_TEMPLATE,
     )
@@ -136,8 +140,8 @@ def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswe
         Объект с ``source_nodes`` и ``response_gen``.
     """
 
-    engine = _build_query_engine(top_k=top_k)
-    streaming_response = engine.query(str_or_query_bundle=question)
+    engine = _build_query_engine(similarity_top_k=top_k)
+    response = cast(StreamingResponse, engine.query(str_or_query_bundle=question))
 
     source_nodes = [
         SearchResult(
@@ -149,12 +153,12 @@ def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswe
             page_start=node.metadata.get("page_start", 0),
             metadata=node.metadata,
         )
-        for node in streaming_response.source_nodes
+        for node in response.source_nodes
     ]
 
     return StreamingAnswer(
         source_nodes=source_nodes,
-        response_gen=streaming_response.response_gen,
+        response_gen=response.response_gen,
     )
 
 
