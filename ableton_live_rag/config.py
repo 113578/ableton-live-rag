@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     chunk_size: int = 512
     chunk_overlap: int = 64
 
+    context_window: int = 32768
+    num_output: int = 4096
+
     similarity_top_k: int = 5
 
 

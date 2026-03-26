@@ -19,6 +19,8 @@ def setup() -> None:
 
     LlamaIndexSettings.chunk_size = settings.chunk_size
     LlamaIndexSettings.chunk_overlap = settings.chunk_overlap
+    LlamaIndexSettings.context_window = settings.context_window
+    LlamaIndexSettings.num_output = settings.num_output
 
     if settings.llm_provider == LLMProvider.ollama:
         _setup_ollama()
@@ -41,10 +43,13 @@ def _setup_ollama() -> None:
 def _setup_vllm() -> None:
     """Подключение модели через vLLM (OpenAI-совместимый API)."""
 
-    from llama_index.llms.openai import OpenAI
+    from llama_index.llms.openai_like import OpenAILike
 
-    LlamaIndexSettings.llm = OpenAI(
+    LlamaIndexSettings.llm = OpenAILike(
         model=settings.vllm_model,
         api_key=settings.vllm_api_key,
         api_base=settings.vllm_url_base,
+        context_window=settings.context_window,
+        max_tokens=settings.num_output,
+        is_chat_model=True,
     )
