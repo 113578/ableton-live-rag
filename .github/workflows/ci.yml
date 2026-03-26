@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  install:
+  install_dependencies:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
         run: uv sync --all-groups --all-extras --all-packages
 
   prek:
-    needs: install
+    needs: install_dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
