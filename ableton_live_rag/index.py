@@ -26,7 +26,10 @@ def _get_qdrant_client() -> QdrantClient:
     return QdrantClient(path=str(settings.qdrant_path))
 
 
-def _get_vector_store(client: QdrantClient) -> QdrantVectorStore:
+def _get_vector_store(
+    client: QdrantClient,
+    collection_name: str | None = None,
+) -> QdrantVectorStore:
     """
     Создание QdrantVectorStore.
 
@@ -34,6 +37,8 @@ def _get_vector_store(client: QdrantClient) -> QdrantVectorStore:
     ----------
     client : QdrantClient
         Клиент Qdrant.
+    collection_name : str or None, optional
+        Имя коллекции.
 
     Returns
     -------
@@ -43,11 +48,14 @@ def _get_vector_store(client: QdrantClient) -> QdrantVectorStore:
 
     return QdrantVectorStore(
         client=client,
-        collection_name=settings.collection_name,
+        collection_name=collection_name or settings.collection_name,
     )
 
 
-def build_index(documents: list[Document]) -> VectorStoreIndex:
+def build_index(
+    documents: list[Document],
+    collection_name: str | None = None,
+) -> VectorStoreIndex:
     """
     Построение VectorStoreIndex из документов с сохранением в Qdrant.
 
@@ -55,21 +63,24 @@ def build_index(documents: list[Document]) -> VectorStoreIndex:
     ----------
     documents : list[Document]
         Список документов из ``ingest.load_documents()``.
+    collection_name : str or None, optional
+        Имя коллекции.
 
     Returns
     -------
     VectorStoreIndex
         Сохранённый индекс.
     """
+
+    name = collection_name or settings.collection_name
     client = _get_qdrant_client()
 
-    # Удаляем старую коллекцию, чтобы избежать дублирования векторов при повторном запуске
     try:
-        client.delete_collection(collection_name=settings.collection_name)
+        client.delete_collection(collection_name=name)
     except Exception:
         pass
 
-    vector_store = _get_vector_store(client=client)
+    vector_store = _get_vector_store(client=client, collection_name=name)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
     return VectorStoreIndex.from_documents(
@@ -79,9 +90,14 @@ def build_index(documents: list[Document]) -> VectorStoreIndex:
     )
 
 
-def load_index() -> VectorStoreIndex:
+def load_index(collection_name: str | None = None) -> VectorStoreIndex:
     """
     Загрузка созданного VectorStoreIndex из Qdrant.
+
+    Parameters
+    ----------
+    collection_name : str or None, optional
+        Имя коллекции.
 
     Returns
     -------
@@ -95,13 +111,15 @@ def load_index() -> VectorStoreIndex:
     """
 
     client = _get_qdrant_client()
-    vector_store = _get_vector_store(client=client)
+    vector_store = _get_vector_store(client=client, collection_name=collection_name)
 
     try:
         return VectorStoreIndex.from_vector_store(vector_store)
     except Exception as e:
+        name = collection_name or settings.collection_name
         raise RuntimeError(
-            f"Индекс не найден в Qdrant. Сначала выполните 'rag ingest'.\nОшибка: {e}"
+            f"Индекс '{name}' не найден в Qdrant. "
+            f"Сначала выполните 'rag ingest'.\nОшибка: {e}"
         ) from e
 
 
@@ -128,29 +146,36 @@ def parse_nodes(documents: list[Document]) -> list[BaseNode]:
     return parser.get_nodes_from_documents(documents=documents)
 
 
-def get_stats() -> dict:
+def get_stats(collection_name: str | None = None) -> dict:
     """
     Получить статистику коллекции Qdrant.
+
+    Parameters
+    ----------
+    collection_name : str or None, optional
+        Имя коллекции.
 
     Returns
     -------
     dict
-        Словарь с ключами ``collection``, ``points_count``, ``indexed_vectors_count``, ``status``.
+        Словарь с ключами ``collection``, ``points_count``,
+        ``indexed_vectors_count``, ``status``.
     """
 
+    name = collection_name or settings.collection_name
     client = _get_qdrant_client()
 
     try:
-        info = client.get_collection(collection_name=settings.collection_name)
+        info = client.get_collection(collection_name=name)
         return {
-            "collection": settings.collection_name,
+            "collection": name,
             "points_count": info.points_count,
             "indexed_vectors_count": info.indexed_vectors_count,
             "status": info.status.value,
         }
     except Exception:
         return {
-            "collection": settings.collection_name,
+            "collection": name,
             "points_count": 0,
             "status": "not_found (запустите 'rag ingest')",
         }

@@ -2,6 +2,7 @@
 Конфигурации проекта.
 """
 
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
@@ -59,3 +60,57 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+@dataclass(frozen=True)
+class EmbeddingModelConfig:
+    """
+    Конфигурация модели эмбеддингов для экспериментов.
+
+    Attributes
+    ----------
+    name : str
+        Имя модели.
+    model_id : str
+        Идентификатор модели на HuggingFace.
+    dim : int
+        Размерность эмбеддинга.
+    query_instruction : str
+        Префикс для запросов (E5 требует ``"query: "``).
+    text_instruction : str
+        Префикс для документов (E5 требует ``"passage: "``).
+    """
+
+    name: str
+    model_id: str
+    dim: int
+    query_instruction: str = ""
+    text_instruction: str = ""
+
+    @property
+    def collection_name(self) -> str:
+        """Имя коллекции Qdrant."""
+
+        return f"{settings.collection_name}_{self.name}"
+
+
+EMBEDDING_MODELS: dict[str, EmbeddingModelConfig] = {
+    "minilm": EmbeddingModelConfig(
+        name="minilm",
+        model_id="sentence-transformers/all-MiniLM-L6-v2",
+        dim=384,
+    ),
+    "e5": EmbeddingModelConfig(
+        name="e5",
+        model_id="intfloat/multilingual-e5-base",
+        dim=768,
+        query_instruction="query: ",
+        text_instruction="passage: ",
+    ),
+    "bge": EmbeddingModelConfig(
+        name="bge",
+        model_id="BAAI/bge-base-en-v1.5",
+        dim=768,
+        query_instruction="Represent this sentence for searching relevant passages: ",
+    ),
+}
