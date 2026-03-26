@@ -1,6 +1,6 @@
 # Ableton Live RAG
 
-RAG-система для вопросов и ответов по документации Ableton Live 12.
+RAG-система по документации Ableton Live 12.
 
 ## Установка
 
@@ -10,20 +10,14 @@ cd ableton-live-rag
 uv sync
 ```
 
-Скачать модель для Ollama:
-```bash
-ollama pull qwen3.5
-```
-
 ## Конфигурация
 
-Создать `.env` по примеру `.env.example` в `.env`:
+Создаём `.env` по примеру `.env.example`:
 ```bash
 cp .env.example .env
 ```
 
 Система поддерживает двух провайдеров LLM:
-
 | Провайдер | `LLM_PROVIDER` | Описание |
 |-----------|---------------|----------|
 | Ollama    | `ollama`      | Локальная модель (по умолчанию) |
@@ -31,7 +25,7 @@ cp .env.example .env
 
 ## Загрузка данных
 
-PDF-документация скачивается через DVC:
+Документация скачивается через DVC:
 ```bash
 uv run dvc repro
 ```
@@ -43,7 +37,7 @@ bash scripts/download_corpus.sh
 
 ## Использование
 
-### 1. Индексирование
+### 1. Индексировать документацию
 
 ```bash
 uv run rag ingest
@@ -52,22 +46,21 @@ uv run rag ingest
 ### 2. Задать вопрос
 
 ```bash
-uv run rag ask "How do I record MIDI in Ableton Live?"
+uv run rag ask "How do I record a MIDI clip?"
 ```
 
-С указанием количества фрагментов контекста:
+Можно указать количество фрагментов контекста:
 ```bash
 uv run rag ask "What is a rack?" --top-k 10
 ```
 
-### 3. Поиск
+### 3. Использовать только векторный поиск
 
-Векторный поиск без генерации ответа:
 ```bash
-uv run rag search "audio routing" --top-k 5
+uv run rag search "Audio routing" --top-k 5
 ```
 
-### 4. Статистика
+### 4. Получить статистику Qdrant-коллекции
 
 ```bash
 uv run rag stats
