@@ -1,0 +1,5 @@
+stages:
+  download_corpus:
+    cmd: bash scripts/download_corpus.sh corpus.pdf
+    outs:
+    - corpus.pdf
