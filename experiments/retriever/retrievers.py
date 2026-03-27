@@ -77,21 +77,6 @@ def _make_bm25(nodes: list[BaseNode]) -> RetrieverConfig:
     bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
-        """
-        Выполнение поиска.
-
-        Parameters
-        ----------
-        query : str
-            Поисковый запрос.
-        top_k : int
-            Количество результатов.
-
-        Returns
-        -------
-        list[NodeWithScore]
-            Ранжированные узлы с оценками.
-        """
         bm25.similarity_top_k = top_k
 
         return bm25.retrieve(query)
@@ -124,22 +109,6 @@ def _make_tfidf(nodes: list[BaseNode]) -> RetrieverConfig:
     tfidf_matrix = vectorizer.fit_transform(raw_documents=texts)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
-        """
-        Выполнение поиска.
-
-        Parameters
-        ----------
-        query : str
-            Поисковый запрос.
-        top_k : int
-            Количество результатов.
-
-        Returns
-        -------
-        list[NodeWithScore]
-            Ранжированные узлы с оценками.
-        """
-
         query_vec = vectorizer.transform(raw_documents=[query])
         scores = cosine_similarity(X=query_vec, Y=tfidf_matrix).flatten()
         top_indices = np.argsort(scores)[::-1][:top_k]
@@ -180,22 +149,6 @@ def _make_vector(
     """
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
-        """
-        Выполнение поиска.
-
-        Parameters
-        ----------
-        query : str
-            Поисковый запрос.
-        top_k : int
-            Количество результатов.
-
-        Returns
-        -------
-        list[NodeWithScore]
-            Ранжированные узлы с оценками.
-        """
-
         LlamaSettings.embed_model = embed_model
 
         retriever = VectorIndexRetriever(index=index, similarity_top_k=top_k)
@@ -283,22 +236,6 @@ def _make_hybrid(
     bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
-        """
-        Выполнение поиска.
-
-        Parameters
-        ----------
-        query : str
-            Поисковый запрос.
-        top_k : int
-            Количество результатов.
-
-        Returns
-        -------
-        list[NodeWithScore]
-            Ранжированные узлы с оценками.
-        """
-
         LlamaSettings.embed_model = embed_model
         vec_retriever = VectorIndexRetriever(index=index, similarity_top_k=top_k)
         bm25.similarity_top_k = top_k

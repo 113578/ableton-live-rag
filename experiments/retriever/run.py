@@ -10,12 +10,12 @@ from pathlib import Path
 
 import typer
 from llama_index.core import Settings as LlamaSettings
-from llama_index.core import VectorStoreIndex
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from rich.console import Console
 from rich.table import Table
 
-from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
+from ableton_live_rag.config import EMBEDDING_MODELS, settings
+from ableton_live_rag.index import parse_nodes
+from ableton_live_rag.ingest import load_documents
 from experiments.metrics import (
     compute_relevances,
     hit_rate,
@@ -28,85 +28,12 @@ from experiments.retriever.retrievers import (
     RetrieverConfig,
     build_all_retrievers,
 )
-from ableton_live_rag.index import load_index, parse_nodes
-from ableton_live_rag.ingest import load_documents
+from experiments.utils import count_total_relevant, load_dataset, load_indexes
 
 app = typer.Typer(no_args_is_help=False)
 console = Console()
 
-DATASET_PATH = Path(__file__).parent.parent / "eval_dataset.json"
 RESULTS_DIR = Path(__file__).resolve().parent.parent / "eval_results" / "retriever"
-
-
-def load_dataset() -> list[dict]:
-    """
-    Загрузка валидационного набор данных.
-
-    Returns
-    -------
-    list[dict]
-        Список вопросов с полями ``id``, ``question``,
-        ``ground_truth_pages``, ``category``.
-    """
-
-    with open(DATASET_PATH) as f:
-        return json.load(f)
-
-
-def _load_indexes(
-    models: dict[str, EmbeddingModelConfig],
-) -> dict[str, VectorStoreIndex]:
-    """
-    Загрузка Qdrant-индексов для выбранных моделей эмбеддингов.
-
-    Parameters
-    ----------
-    models : dict[str, EmbeddingModelConfig]
-        Модели, для которых нужно загрузить индексы.
-
-    Returns
-    -------
-    dict[str, VectorStoreIndex]
-        Индексы по имени модели.
-    """
-
-    indexes: dict[str, VectorStoreIndex] = {}
-
-    for key, emb in models.items():
-        console.print(f"[dim]  Загрузка индекса {emb.collection_name}...[/dim]")
-
-        LlamaSettings.embed_model = HuggingFaceEmbedding(
-            model_name=emb.model_id,
-            query_instruction=emb.query_instruction or None,
-            text_instruction=emb.text_instruction or None,
-        )
-
-        indexes[key] = load_index(collection_name=emb.collection_name)
-
-    return indexes
-
-
-def _count_total_relevant(ground_truth_ranges: list[list[int]]) -> int:
-    """
-    Подсчёт общего числа релевантных страниц в ground truth.
-
-    Parameters
-    ----------
-    ground_truth_ranges : list[list[int]]
-        Список списков релевантных страниц.
-
-    Returns
-    -------
-    int
-        Число релевантных страниц в ground truth.
-    """
-
-    pages: set[int] = set()
-
-    for start, end in ground_truth_ranges:
-        pages.update(range(start, end + 1))
-
-    return len(pages)
 
 
 def evaluate_retriever(
@@ -161,7 +88,7 @@ def evaluate_retriever(
         rels = compute_relevances(
             retrieved_pages=retrieved_pages, ground_truth_ranges=gt
         )
-        total_relevant = _count_total_relevant(ground_truth_ranges=gt)
+        total_relevant = count_total_relevant(ground_truth_ranges=gt)
 
         per_question.append(
             {
@@ -254,12 +181,6 @@ def print_results(results: list[dict], top_k: int) -> None:
 @app.command()
 def main(
     top_k: int = typer.Option(5, "--top-k", "-k", help="Количество результатов"),
-    models: str = typer.Option(
-        "",
-        "--models",
-        "-m",
-        help="Модели эмбеддингов через запятую (например minilm,e5). По умолчанию все",
-    ),
     save: bool = typer.Option(
         False, "--save", help="Сохранить детальные результаты в JSON"
     ),
@@ -271,34 +192,18 @@ def main(
     ----------
     top_k : int
         Количество результатов поиска.
-    models : str
-        Модели эмбеддингов через запятую.
     save : bool
         Сохранить детальные результаты в JSON.
     """
 
-    # Выбор моделей
-    if models:
-        requested = [m.strip() for m in models.split(",")]
-        unknown = set(requested) - set(EMBEDDING_MODELS)
-
-        if unknown:
-            console.print(
-                f"[red]Неизвестные модели: {unknown}. "
-                f"Доступные: {list(EMBEDDING_MODELS)}[/red]"
-            )
-            raise typer.Exit(1)
-
-        selected = {k: EMBEDDING_MODELS[k] for k in requested}
-    else:
-        selected = EMBEDDING_MODELS
+    selected = EMBEDDING_MODELS
 
     LlamaSettings.chunk_size = settings.chunk_size
     LlamaSettings.chunk_overlap = settings.chunk_overlap
 
     # Загрузка индексов
     console.print("[dim]Загрузка индексов из Qdrant...[/dim]")
-    indexes = _load_indexes(models=selected)
+    indexes = load_indexes(models=selected)
 
     # Парсинг узлов (для sparse ретриверов)
     console.print("[dim]Парсинг документов в узлы (для BM25/TF-IDF)...[/dim]")
