@@ -10,20 +10,25 @@ from qdrant_client import QdrantClient
 
 from ableton_live_rag.config import settings
 
+_qdrant_client: QdrantClient | None = None
+
 
 def _get_qdrant_client() -> QdrantClient:
     """
-    Создание локального клиента Qdrant.
+    Получение экземпляра QdrantClient.
 
     Returns
     -------
     QdrantClient
         Клиент Qdrant.
     """
+    global _qdrant_client
 
-    settings.qdrant_path.mkdir(parents=True, exist_ok=True)
+    if _qdrant_client is None:
+        settings.qdrant_path.mkdir(parents=True, exist_ok=True)
+        _qdrant_client = QdrantClient(path=str(settings.qdrant_path))
 
-    return QdrantClient(path=str(settings.qdrant_path))
+    return _qdrant_client
 
 
 def _get_vector_store(

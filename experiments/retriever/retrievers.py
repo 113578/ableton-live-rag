@@ -9,7 +9,7 @@ import numpy as np
 from llama_index.core import Settings as LlamaSettings
 from llama_index.core import VectorStoreIndex
 from llama_index.core.retrievers import VectorIndexRetriever
-from llama_index.core.schema import BaseNode, NodeWithScore, QueryBundle
+from llama_index.core.schema import BaseNode, NodeWithScore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity

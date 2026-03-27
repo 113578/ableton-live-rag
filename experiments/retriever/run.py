@@ -158,7 +158,9 @@ def evaluate_retriever(
         retrieved_pages = [n.metadata.get("page_start", 0) for n in nodes]
         gt = item["ground_truth_pages"]
 
-        rels = compute_relevances(retrieved_pages=retrieved_pages, ground_truth_ranges=gt)
+        rels = compute_relevances(
+            retrieved_pages=retrieved_pages, ground_truth_ranges=gt
+        )
         total_relevant = _count_total_relevant(ground_truth_ranges=gt)
 
         per_question.append(
@@ -308,7 +310,9 @@ def main(
     console.print(f"[green]Загружено {len(dataset)} вопросов из eval-датасета[/green]")
 
     # Построение ретриверов
-    configs = build_all_retrievers(indexes=indexes, nodes=nodes, embedding_configs=selected)
+    configs = build_all_retrievers(
+        indexes=indexes, nodes=nodes, embedding_configs=selected
+    )
     console.print(f"[green]Подготовлено {len(configs)} ретриверов[/green]\n")
 
     # Оценка всех компонент поиска
