@@ -24,6 +24,46 @@ class LLMProvider(str, Enum):
 class Settings(BaseSettings):
     """
     Конфигурация проекта.
+
+    Все параметры можно переопределить через переменные окружения
+    или файл ``.env`` в корне репозитория.
+
+    Attributes
+    ----------
+    llm_provider : LLMProvider
+        Провайдер LLM (``ollama`` или ``vllm``).
+    ollama_base_url : str
+        Базовый URL сервера Ollama.
+    ollama_model : str
+        Имя модели Ollama.
+    ollama_request_timeout : int
+        Таймаут запроса к Ollama в секундах.
+    vllm_url_base : str
+        Базовый URL vLLM-сервера (OpenAI-совместимый API).
+    vllm_api_key : str
+        API-ключ для vLLM.
+    vllm_model : str
+        Имя модели vLLM.
+    embedding_model : str
+        Идентификатор модели эмбеддингов (для основного пайплайна).
+    embedding_dim : int
+        Размерность эмбеддинга основной модели.
+    corpus_path : Path
+        Путь к PDF-файлу корпуса.
+    qdrant_path : Path
+        Путь к директории с хранилищем Qdrant.
+    collection_name : str
+        Базовое имя коллекции Qdrant.
+    chunk_size : int
+        Максимальный размер чанка в токенах.
+    chunk_overlap : int
+        Перекрытие между соседними чанками в токенах.
+    context_window : int
+        Размер контекстного окна LLM в токенах.
+    num_output : int
+        Максимальное число токенов в ответе LLM.
+    similarity_top_k : int
+        Количество фрагментов, возвращаемых компонентом поиска по умолчанию.
     """
 
     model_config = SettingsConfigDict(
