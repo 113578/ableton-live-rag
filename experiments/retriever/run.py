@@ -16,7 +16,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
-from experiments.retriever.metrics import (
+from experiments.metrics import (
     compute_relevances,
     hit_rate,
     mrr,
