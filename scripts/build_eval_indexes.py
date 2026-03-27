@@ -48,11 +48,11 @@ def main() -> None:
     LlamaSettings.chunk_size = settings.chunk_size
     LlamaSettings.chunk_overlap = settings.chunk_overlap
 
-    models = EMBEDDING_MODELS
+    console.print(
+        f"[bold]Построение индексов для {len(EMBEDDING_MODELS)} моделей[/bold]"
+    )
 
-    console.print(f"[bold]Построение индексов для {len(models)} моделей[/bold]")
-
-    for emb in models.values():
+    for emb in EMBEDDING_MODELS.values():
         build_for_model(emb=emb)
 
     console.print("\n[bold green]Все индексы построены.[/bold green]")
