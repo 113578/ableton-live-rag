@@ -108,9 +108,10 @@ def extract_toc(doc: fitz.Document) -> list[Section]:
 
 def clean_text(text: str) -> str:
     """
-    Очищение текста: исправление переносов слов на границах строк,
-    удаление номеров страниц, пустых маркеров списков,
-    нормализацию пробелов и переносов строк.
+    Очищение сырого текста из PyMuPDF.
+
+    Исправляет переносы слов на границах строк, удаляет номера страниц
+    и пустые маркеры списков, нормализует пробелы и переносы строк.
 
     Parameters
     ----------
@@ -164,7 +165,7 @@ def section_to_document(doc: fitz.Document, section: Section) -> Document | None
 
     pages_text: list[str] = []
 
-    for page_num in range(section.page_start, section.page_end):
+    for page_num in range(section.page_start, section.page_end + 1):
         if 0 <= page_num < doc.page_count:
             pages_text.append(doc[page_num].get_text())
 
@@ -183,7 +184,7 @@ def section_to_document(doc: fitz.Document, section: Section) -> Document | None
             "toc_title": section.title,
             "toc_level": section.level,
             "page_start": section.page_start + 1,
-            "page_end": section.page_end,
+            "page_end": section.page_end + 1,
         },
         excluded_llm_metadata_keys=["toc_level"],
     )

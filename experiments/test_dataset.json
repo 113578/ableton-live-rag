@@ -1,0 +1,62 @@
+[
+  {
+    "id": "t01",
+    "question": "How do I use the Beat Repeat audio effect?",
+    "ground_truth_pages": [[523, 525]],
+    "category": "procedural"
+  },
+  {
+    "id": "t02",
+    "question": "What is the Vocoder effect and how does it process audio?",
+    "ground_truth_pages": [[632, 635]],
+    "category": "factual"
+  },
+  {
+    "id": "t03",
+    "question": "How do I use the Sampler instrument for multisampling?",
+    "ground_truth_pages": [[718, 736]],
+    "category": "procedural"
+  },
+  {
+    "id": "t04",
+    "question": "How do I use Clip Envelopes to modulate device parameters?",
+    "ground_truth_pages": [[483, 494]],
+    "category": "procedural"
+  },
+  {
+    "id": "t05",
+    "question": "What is the Glue Compressor and how is it different from the regular Compressor?",
+    "ground_truth_pages": [[561, 563]],
+    "category": "conceptual"
+  },
+  {
+    "id": "t06",
+    "question": "How do I use the Drum Rack to build a custom drum kit?",
+    "ground_truth_pages": [[460, 463]],
+    "category": "procedural"
+  },
+  {
+    "id": "t07",
+    "question": "How does the Analog synthesizer work?",
+    "ground_truth_pages": [[649, 658]],
+    "category": "factual"
+  },
+  {
+    "id": "t08",
+    "question": "How do I edit MPE data in a MIDI clip?",
+    "ground_truth_pages": [[310, 319]],
+    "category": "procedural"
+  },
+  {
+    "id": "t09",
+    "question": "What is the Multiband Dynamics effect and how do I use it?",
+    "ground_truth_pages": [[577, 582]],
+    "category": "factual"
+  },
+  {
+    "id": "t10",
+    "question": "How do I use the Capture MIDI feature to save ideas I played?",
+    "ground_truth_pages": [[400, 402]],
+    "category": "procedural"
+  }
+]

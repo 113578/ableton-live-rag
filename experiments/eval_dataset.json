@@ -1,0 +1,242 @@
+[
+  {
+    "id": "q01",
+    "question": "What is the difference between Session View and Arrangement View?",
+    "ground_truth_pages": [[33, 35], [145, 147], [167, 169]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q02",
+    "question": "How do I warp an audio clip to match the tempo of my project?",
+    "ground_truth_pages": [[218, 231]],
+    "category": "procedural"
+  },
+  {
+    "id": "q03",
+    "question": "How can I set up a sidechain compressor in Ableton Live?",
+    "ground_truth_pages": [[534, 536]],
+    "category": "procedural"
+  },
+  {
+    "id": "q04",
+    "question": "What are Follow Actions and how do I use them to create variations?",
+    "ground_truth_pages": [[346, 351]],
+    "category": "procedural"
+  },
+  {
+    "id": "q05",
+    "question": "How do I route audio from one track to another?",
+    "ground_truth_pages": [[352, 373]],
+    "category": "procedural"
+  },
+  {
+    "id": "q06",
+    "question": "How do I freeze and flatten a track to save CPU?",
+    "ground_truth_pages": [[927, 928]],
+    "category": "procedural"
+  },
+  {
+    "id": "q07",
+    "question": "What is the Operator synthesizer and what are its main features?",
+    "ground_truth_pages": [[700, 717]],
+    "category": "factual"
+  },
+  {
+    "id": "q08",
+    "question": "How do I record and edit automation envelopes?",
+    "ground_truth_pages": [[470, 482]],
+    "category": "procedural"
+  },
+  {
+    "id": "q09",
+    "question": "What keyboard shortcut toggles between Session and Arrangement View?",
+    "ground_truth_pages": [[955, 956]],
+    "category": "factual"
+  },
+  {
+    "id": "q10",
+    "question": "How do I use the browser to search for and preview sounds?",
+    "ground_truth_pages": [[56, 66], [109, 112]],
+    "category": "procedural"
+  },
+  {
+    "id": "q11",
+    "question": "How do I set up MIDI mapping for a hardware controller?",
+    "ground_truth_pages": [[810, 818]],
+    "category": "procedural"
+  },
+  {
+    "id": "q12",
+    "question": "How do I export and render audio from my Live set?",
+    "ground_truth_pages": [[118, 124]],
+    "category": "procedural"
+  },
+  {
+    "id": "q13",
+    "question": "What are Instrument Racks and how do they work?",
+    "ground_truth_pages": [[450, 468]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q14",
+    "question": "What parameters does the Compressor audio effect have?",
+    "ground_truth_pages": [[531, 536]],
+    "category": "factual"
+  },
+  {
+    "id": "q15",
+    "question": "What is Comping and how do I use it to create the best take?",
+    "ground_truth_pages": [[409, 414]],
+    "category": "procedural"
+  },
+  {
+    "id": "q16",
+    "question": "How do I set up Ableton Link to sync with other devices on the network?",
+    "ground_truth_pages": [[918, 920]],
+    "category": "procedural"
+  },
+  {
+    "id": "q17",
+    "question": "What are the different track types available in Ableton Live?",
+    "ground_truth_pages": [[35, 38], [378, 382]],
+    "category": "factual"
+  },
+  {
+    "id": "q18",
+    "question": "How do I use the Wavetable synthesizer to create sounds?",
+    "ground_truth_pages": [[759, 768]],
+    "category": "procedural"
+  },
+  {
+    "id": "q19",
+    "question": "What is the difference between audio clips and MIDI clips?",
+    "ground_truth_pages": [[38, 41]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q20",
+    "question": "How do I configure an external audio interface in Live's preferences?",
+    "ground_truth_pages": [[25, 26]],
+    "category": "procedural"
+  },
+  {
+    "id": "q21",
+    "question": "How does Stem Separation work in Ableton Live?",
+    "ground_truth_pages": [[415, 419]],
+    "category": "procedural"
+  },
+  {
+    "id": "q22",
+    "question": "What are Groove templates and how do I apply them to clips?",
+    "ground_truth_pages": [[325, 330]],
+    "category": "procedural"
+  },
+  {
+    "id": "q23",
+    "question": "How do I convert an audio clip to MIDI?",
+    "ground_truth_pages": [[320, 324]],
+    "category": "procedural"
+  },
+  {
+    "id": "q24",
+    "question": "What is Max for Live and what can it do?",
+    "ground_truth_pages": [[769, 774]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q25",
+    "question": "How does Scale Awareness work in Live 12?",
+    "ground_truth_pages": [[44, 46]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q26",
+    "question": "How do I set the Dry/Wet knob on a Reverb effect?",
+    "ground_truth_pages": [[592, 596]],
+    "category": "procedural"
+  },
+  {
+    "id": "q27",
+    "question": "How does the EQ Eight audio effect work?",
+    "ground_truth_pages": [[551, 554]],
+    "category": "factual"
+  },
+  {
+    "id": "q28",
+    "question": "How do I use the Hybrid Reverb effect?",
+    "ground_truth_pages": [[565, 571]],
+    "category": "procedural"
+  },
+  {
+    "id": "q29",
+    "question": "How do I record MIDI patterns using overdub?",
+    "ground_truth_pages": [[390, 402]],
+    "category": "procedural"
+  },
+  {
+    "id": "q30",
+    "question": "What is the Drift synthesizer and how does it work?",
+    "ground_truth_pages": [[667, 675]],
+    "category": "factual"
+  },
+  {
+    "id": "q31",
+    "question": "How do I use the Delay audio effect?",
+    "ground_truth_pages": [[542, 544]],
+    "category": "procedural"
+  },
+  {
+    "id": "q32",
+    "question": "How do I create and use Group Tracks?",
+    "ground_truth_pages": [[379, 381]],
+    "category": "procedural"
+  },
+  {
+    "id": "q33",
+    "question": "What are Warp Modes and when should I use each one?",
+    "ground_truth_pages": [[229, 231]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q34",
+    "question": "How do I use the crossfader in Ableton Live?",
+    "ground_truth_pages": [[383, 386]],
+    "category": "procedural"
+  },
+  {
+    "id": "q35",
+    "question": "How does the Arpeggiator MIDI effect work?",
+    "ground_truth_pages": [[636, 639]],
+    "category": "factual"
+  },
+  {
+    "id": "q36",
+    "question": "How do I use the Looper effect for live performance?",
+    "ground_truth_pages": [[573, 577]],
+    "category": "procedural"
+  },
+  {
+    "id": "q37",
+    "question": "What is the Auto Filter effect and what parameters does it have?",
+    "ground_truth_pages": [[503, 511]],
+    "category": "factual"
+  },
+  {
+    "id": "q38",
+    "question": "How do I set up return tracks and sends?",
+    "ground_truth_pages": [[381, 383]],
+    "category": "procedural"
+  },
+  {
+    "id": "q39",
+    "question": "How do I use Tuning Systems in Live 12?",
+    "ground_truth_pages": [[331, 339]],
+    "category": "procedural"
+  },
+  {
+    "id": "q40",
+    "question": "How do I use the Simpler instrument to play samples?",
+    "ground_truth_pages": [[736, 746]],
+    "category": "procedural"
+  }
+]
