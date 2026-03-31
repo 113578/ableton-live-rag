@@ -97,9 +97,9 @@ def load_indexes(
     return indexes
 
 
-def prepare_experiment() -> (
-    tuple[dict[str, VectorStoreIndex], list[BaseNode], list[dict]]
-):
+def prepare_experiment() -> tuple[
+    dict[str, VectorStoreIndex], list[BaseNode], list[dict]
+]:
     """
     Подготовка окружения для эксперимента.
 
@@ -159,9 +159,7 @@ def evaluate_dataset(
             nodes = retrieve_fn(item["question"])
         except Exception as e:
             console.print(f"[red]  Ошибка на '{item['id']}': {e}[/red]")
-            per_question.append(
-                {"id": item["id"], "error": str(e), "relevances": []}
-            )
+            per_question.append({"id": item["id"], "error": str(e), "relevances": []})
             continue
 
         elapsed = time.perf_counter() - t0
@@ -209,9 +207,7 @@ def aggregate_metrics(per_question: list[dict], total_time: float) -> dict:
     return {
         "hit_rate": round(sum(hit_rate(q["relevances"]) for q in valid) / n, 3),
         "mrr": round(sum(mrr(q["relevances"]) for q in valid) / n, 3),
-        "precision": round(
-            sum(precision_at_k(q["relevances"]) for q in valid) / n, 3
-        ),
+        "precision": round(sum(precision_at_k(q["relevances"]) for q in valid) / n, 3),
         "recall": round(
             sum(recall_at_k(q["relevances"], q["total_relevant"]) for q in valid) / n,
             3,
