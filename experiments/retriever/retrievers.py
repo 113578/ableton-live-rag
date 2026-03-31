@@ -15,6 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ableton_live_rag.config import EmbeddingModelConfig
+from experiments.utils import make_embed_model
 
 
 @dataclass
@@ -57,14 +58,14 @@ class RetrieverConfig:
         return self._retrieve_fn(query, top_k)
 
 
-def _make_bm25(nodes: list[BaseNode]) -> RetrieverConfig:
+def _make_bm25(bm25) -> RetrieverConfig:  # noqa: ANN001
     """
     Создание BM25.
 
     Parameters
     ----------
-    nodes : list[BaseNode]
-        Узлы для построения BM25-индекса.
+    bm25 : BM25Retriever
+        Готовый BM25-ретривер.
 
     Returns
     -------
@@ -72,13 +73,8 @@ def _make_bm25(nodes: list[BaseNode]) -> RetrieverConfig:
         Конфигурация компонента поиска.
     """
 
-    from llama_index.retrievers.bm25 import BM25Retriever
-
-    bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
-
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
         bm25.similarity_top_k = top_k
-
         return bm25.retrieve(query)
 
     return RetrieverConfig(
@@ -148,11 +144,11 @@ def _make_vector(
         Конфигурация компонента поиска.
     """
 
+    retriever = VectorIndexRetriever(index=index, similarity_top_k=5)
+
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
         LlamaSettings.embed_model = embed_model
-
-        retriever = VectorIndexRetriever(index=index, similarity_top_k=top_k)
-
+        retriever.similarity_top_k = top_k
         return retriever.retrieve(query)
 
     return RetrieverConfig(
@@ -207,7 +203,7 @@ def _reciprocal_rank_fusion(
 
 def _make_hybrid(
     index: VectorStoreIndex,
-    nodes: list[BaseNode],
+    bm25,  # noqa: ANN001
     model_name: str,
     embed_model: HuggingFaceEmbedding,
 ) -> RetrieverConfig:
@@ -218,8 +214,8 @@ def _make_hybrid(
     ----------
     index : VectorStoreIndex
         Загруженный индекс.
-    nodes : list[BaseNode]
-        Узлы для построения BM25-индекса.
+    bm25 : BM25Retriever
+        Готовый BM25-ретривер (разделяется между всеми гибридными конфигурациями).
     model_name : str
         Название модели эмбеддингов.
     embed_model : HuggingFaceEmbedding
@@ -231,13 +227,11 @@ def _make_hybrid(
         Конфигурация компонента поиска.
     """
 
-    from llama_index.retrievers.bm25 import BM25Retriever
-
-    bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
+    vec_retriever = VectorIndexRetriever(index=index, similarity_top_k=5)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
         LlamaSettings.embed_model = embed_model
-        vec_retriever = VectorIndexRetriever(index=index, similarity_top_k=top_k)
+        vec_retriever.similarity_top_k = top_k
         bm25.similarity_top_k = top_k
 
         vec_results = vec_retriever.retrieve(query)
@@ -250,28 +244,6 @@ def _make_hybrid(
         description=f"BM25 + Vector RRF ({model_name})",
         category="hybrid",
         _retrieve_fn=_retrieve,
-    )
-
-
-def _make_embed_model(emb: EmbeddingModelConfig) -> HuggingFaceEmbedding:
-    """
-    Создание HuggingFaceEmbedding из конфигурации.
-
-    Parameters
-    ----------
-    emb : EmbeddingModelConfig
-        Конфигурация модели эмбеддингов для экспериментов.
-
-    Returns
-    -------
-    HuggingFaceEmbedding
-        Обёртка модели эмбеддингов от HuggingFace.
-    """
-
-    return HuggingFaceEmbedding(
-        model_name=emb.model_id,
-        query_instruction=emb.query_instruction or None,
-        text_instruction=emb.text_instruction or None,
     )
 
 
@@ -298,18 +270,18 @@ def build_all_retrievers(
         Список конфигураций ретриверов, готовых к оценке.
     """
 
-    configs: list[RetrieverConfig] = []
+    from llama_index.retrievers.bm25 import BM25Retriever
 
-    # Sparse
-    configs.append(_make_bm25(nodes))
-    configs.append(_make_tfidf(nodes))
+    bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
 
-    # Dense и Hybrid
+    configs: list[RetrieverConfig] = [
+        _make_bm25(bm25),
+        _make_tfidf(nodes),
+    ]
+
     for model_name, index in indexes.items():
-        emb = embedding_configs[model_name]
-        embed_model = _make_embed_model(emb)
-
+        embed_model = make_embed_model(embedding_configs[model_name])
         configs.append(_make_vector(index, model_name, embed_model))
-        configs.append(_make_hybrid(index, nodes, model_name, embed_model))
+        configs.append(_make_hybrid(index, bm25, model_name, embed_model))
 
     return configs
