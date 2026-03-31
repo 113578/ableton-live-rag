@@ -18,6 +18,8 @@ dependencies = [
     "pydantic-settings>=2.7",
     "python-dotenv>=1.0",
     "dvc>=3.67.0",
+    "scikit-learn>=1.8.0",
+    "sentence-transformers>=5.3.0",
 ]
 
 [project.scripts]
@@ -38,7 +40,6 @@ dev = [
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
 commit_parser = "conventional"
-branch = "main"
 commit_message = "chore(release): v{version}"
 allow_zero_version = true
 build_command = """
@@ -47,14 +48,18 @@ build_command = """
     uv build
 """
 
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
 [tool.semantic_release.remote]
 type = "github"
 
 [tool.semantic_release.commit_parser_options]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
-parse_squash_commits = true
-ignore_merge_commits = true
+allowed_tags = ["feat", "fix", "perf", "build", "chore", "ci", "docs", "refactor", "style", "test"]
+default_bump_level = 0
 
 [tool.semantic_release.changelog.default_templates]
 changelog_file = "CHANGELOG.md"
