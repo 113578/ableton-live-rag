@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          OUTPUT=$(uv run semantic-release version 2>&1) || true
+          OUTPUT=$(uv run semantic-release version --push 2>&1) || true
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "No release will be made"; then
             echo "released=false" >> "$GITHUB_OUTPUT"
