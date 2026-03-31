@@ -174,3 +174,26 @@ def compute_relevances(
     """
 
     return [is_page_relevant(p, ground_truth_ranges) for p in retrieved_pages]
+
+
+def count_total_relevant(ground_truth_ranges: list[list[int]]) -> int:
+    """
+    Подсчёт числа уникальных релевантных страниц в ground truth.
+
+    Parameters
+    ----------
+    ground_truth_ranges : list[list[int]]
+        Список пар ``[start, end]`` — эталонные диапазоны страниц.
+
+    Returns
+    -------
+    int
+        Число уникальных релевантных страниц.
+    """
+
+    pages: set[int] = set()
+
+    for start, end in ground_truth_ranges:
+        pages.update(range(start, end + 1))
+
+    return len(pages)
