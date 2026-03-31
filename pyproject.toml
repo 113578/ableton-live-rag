@@ -1,6 +1,6 @@
 [project]
 name = "ableton-live-rag"
-version = "0.1.0"
+version = "0.2.0"
 description = "RAG-система для документации Ableton Live 12"
 readme = "README.md"
 requires-python = ">=3.13"
