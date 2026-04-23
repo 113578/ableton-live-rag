@@ -1,9 +1,17 @@
 schema: '2.0'
 stages:
   download_corpus:
-    cmd: bash scripts/download_corpus.sh corpus.pdf
+    cmd: bash scripts/download_corpus.sh corpus
     outs:
-    - path: corpus.pdf
+    - path: corpus/live_12.pdf
       hash: md5
       md5: 35cce01f5372cec02c860b58b42e2ca3
       size: 87585316
+    - path: corpus/making_music.pdf
+      hash: md5
+      md5: ed782ddf828ed0157b788042f731106b
+      size: 23100686
+    - path: corpus/push_3.pdf
+      hash: md5
+      md5: bf1edc2ebdb3e7955e7c293b84cc4e40
+      size: 6948738
