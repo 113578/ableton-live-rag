@@ -25,6 +25,11 @@ dependencies = [
 [project.scripts]
 rag = "ableton_live_rag.cli:app"
 
+[project.optional-dependencies]
+evaluation = [
+    "deepeval>=3.9.7",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
