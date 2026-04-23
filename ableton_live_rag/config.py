@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     embedding_dim : int
         Размерность эмбеддинга основной модели.
     corpus_path : Path
-        Путь к PDF-файлу корпуса.
+        Путь к директории с PDF-файлами корпуса.
     qdrant_path : Path
         Путь к директории с хранилищем Qdrant.
     collection_name : str
@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     embedding_model: str = "all-MiniLM-L6-v2"
     embedding_dim: int = 384
 
-    corpus_path: Path = PROJECT_ROOT / "corpus.pdf"
+    corpus_path: Path = PROJECT_ROOT / "corpus"
     qdrant_path: Path = PROJECT_ROOT / "data" / "qdrant"
 
     collection_name: str = "ableton_live_docs"

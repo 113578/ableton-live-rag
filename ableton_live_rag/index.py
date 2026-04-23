@@ -15,7 +15,7 @@ _qdrant_client: QdrantClient | None = None
 
 def _get_qdrant_client() -> QdrantClient:
     """
-    Получение экземпляра QdrantClient.
+    Получение экземпляра QdrantClient (синглтон).
 
     Returns
     -------
@@ -115,17 +115,17 @@ def load_index(collection_name: str | None = None) -> VectorStoreIndex:
         Если коллекция не найдена (инжест не был выполнен).
     """
 
+    name = collection_name or settings.collection_name
     client = _get_qdrant_client()
-    vector_store = _get_vector_store(client=client, collection_name=collection_name)
 
-    try:
-        return VectorStoreIndex.from_vector_store(vector_store)
-    except Exception as e:
-        name = collection_name or settings.collection_name
+    if not client.collection_exists(collection_name=name):
         raise RuntimeError(
-            f"Индекс '{name}' не найден в Qdrant. "
-            f"Сначала выполните 'rag ingest'.\nОшибка: {e}"
-        ) from e
+            f"Индекс '{name}' не найден в Qdrant. Сначала выполните 'rag ingest'."
+        )
+
+    vector_store = _get_vector_store(client=client, collection_name=name)
+
+    return VectorStoreIndex.from_vector_store(vector_store)
 
 
 def parse_nodes(documents: list[Document]) -> list[BaseNode]:

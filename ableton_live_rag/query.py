@@ -2,8 +2,9 @@
 Пайплайн запросов: поиск по индексу и генерация ответов.
 """
 
+import asyncio
 from dataclasses import dataclass, field
-from typing import Generator, cast
+from typing import AsyncGenerator, cast
 
 from llama_index.core.prompts import RichPromptTemplate
 from llama_index.core.base.response.schema import StreamingResponse
@@ -81,12 +82,12 @@ class StreamingAnswer:
     ----------
     source_nodes : list[SearchResult]
         Найденные фрагменты документации.
-    response_gen : Generator[str, None, None]
-        Генератор токенов ответа LLM.
+    response_gen : AsyncGenerator[str, None]
+        Асинхронный генератор токенов ответа LLM.
     """
 
     source_nodes: list[SearchResult]
-    response_gen: Generator[str, None, None]
+    response_gen: AsyncGenerator[str, None]
 
 
 def _build_query_engine(similarity_top_k: int) -> RetrieverQueryEngine:
@@ -123,7 +124,7 @@ def _build_query_engine(similarity_top_k: int) -> RetrieverQueryEngine:
     )
 
 
-def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswer:
+async def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswer:
     """
     Постановка вопроса и получение стримингового ответа с источниками.
 
@@ -137,32 +138,25 @@ def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswe
     Returns
     -------
     StreamingAnswer
-        Объект с ``source_nodes`` и ``response_gen``.
+        Объект с ``source_nodes`` и асинхронным ``response_gen``.
     """
 
     engine = _build_query_engine(similarity_top_k=top_k)
-    response = cast(StreamingResponse, engine.query(str_or_query_bundle=question))
-
-    source_nodes = [
-        SearchResult(
-            text=node.text,
-            score=node.score or 0.0,
-            chapter=node.metadata.get("chapter", ""),
-            section=node.metadata.get("section", ""),
-            subsection=node.metadata.get("subsection", ""),
-            page_start=node.metadata.get("page_start", 0),
-            metadata=node.metadata,
-        )
-        for node in response.source_nodes
-    ]
-
-    return StreamingAnswer(
-        source_nodes=source_nodes,
-        response_gen=response.response_gen,
+    response = cast(
+        StreamingResponse,
+        await asyncio.to_thread(engine.query, question),
     )
 
+    source_nodes = [_to_search_result(node) for node in response.source_nodes]
 
-def retrieve(
+    async def _token_gen() -> AsyncGenerator[str, None]:
+        for token in response.response_gen:
+            yield token
+
+    return StreamingAnswer(source_nodes=source_nodes, response_gen=_token_gen())
+
+
+async def retrieve(
     query: str, similarity_top_k: int = settings.similarity_top_k
 ) -> list[SearchResult]:
     """
@@ -185,17 +179,20 @@ def retrieve(
     retriever = VectorIndexRetriever(
         index=vector_index, similarity_top_k=similarity_top_k
     )
-    nodes = retriever.retrieve(str_or_query_bundle=query)
+    nodes = await asyncio.to_thread(retriever.retrieve, query)
 
-    return [
-        SearchResult(
-            text=node.text,
-            score=node.score or 0.0,
-            chapter=node.metadata.get("chapter", ""),
-            section=node.metadata.get("section", ""),
-            subsection=node.metadata.get("subsection", ""),
-            page_start=node.metadata.get("page_start", 0),
-            metadata=node.metadata,
-        )
-        for node in nodes
-    ]
+    return [_to_search_result(node) for node in nodes]
+
+
+def _to_search_result(node) -> SearchResult:
+    """Преобразование ``NodeWithScore`` в ``SearchResult``."""
+
+    return SearchResult(
+        text=node.text,
+        score=node.score or 0.0,
+        chapter=node.metadata.get("chapter", ""),
+        section=node.metadata.get("section", ""),
+        subsection=node.metadata.get("subsection", ""),
+        page_start=node.metadata.get("page_start", 0),
+        metadata=node.metadata,
+    )

@@ -39,7 +39,7 @@ def load_dataset() -> list[dict]:
     Returns
     -------
     list[dict]
-        Список вопросов с полями ``id``, ``question``,
+        Список вопросов с полями ``id``, ``question``, ``source``,
         ``ground_truth_pages``, ``category``.
     """
 
@@ -165,17 +165,25 @@ def evaluate_dataset(
         elapsed = time.perf_counter() - t0
         total_time += elapsed
 
-        retrieved_pages = [n.metadata.get("page_start", 0) for n in nodes]
+        retrieved = [
+            (n.metadata.get("source", ""), n.metadata.get("page_start", 0))
+            for n in nodes
+        ]
+
         gt = item["ground_truth_pages"]
+        gt_source = item["source"]
+
         rels = compute_relevances(
-            retrieved_pages=retrieved_pages, ground_truth_ranges=gt
+            retrieved=retrieved,
+            ground_truth_source=gt_source,
+            ground_truth_ranges=gt,
         )
 
         per_question.append(
             {
                 "id": item["id"],
                 "relevances": rels,
-                "retrieved_pages": retrieved_pages,
+                "retrieved": [f"{s}:p{p}" for s, p in retrieved],
                 "total_relevant": count_total_relevant(ground_truth_ranges=gt),
                 "latency_s": round(elapsed, 3),
             }

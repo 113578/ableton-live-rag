@@ -2,61 +2,113 @@
   {
     "id": "t01",
     "question": "How do I use the Beat Repeat audio effect?",
-    "ground_truth_pages": [[523, 525]],
+    "source": "live_12",
+    "ground_truth_pages": [[523, 524]],
     "category": "procedural"
   },
   {
     "id": "t02",
     "question": "What is the Vocoder effect and how does it process audio?",
-    "ground_truth_pages": [[632, 635]],
+    "source": "live_12",
+    "ground_truth_pages": [[632, 634]],
     "category": "factual"
   },
   {
     "id": "t03",
     "question": "How do I use the Sampler instrument for multisampling?",
-    "ground_truth_pages": [[718, 736]],
+    "source": "live_12",
+    "ground_truth_pages": [[718, 735]],
     "category": "procedural"
   },
   {
     "id": "t04",
     "question": "How do I use Clip Envelopes to modulate device parameters?",
+    "source": "live_12",
     "ground_truth_pages": [[483, 494]],
     "category": "procedural"
   },
   {
     "id": "t05",
     "question": "What is the Glue Compressor and how is it different from the regular Compressor?",
-    "ground_truth_pages": [[561, 563]],
+    "source": "live_12",
+    "ground_truth_pages": [[561, 562]],
     "category": "conceptual"
   },
   {
     "id": "t06",
     "question": "How do I use the Drum Rack to build a custom drum kit?",
-    "ground_truth_pages": [[460, 463]],
+    "source": "live_12",
+    "ground_truth_pages": [[460, 462]],
     "category": "procedural"
   },
   {
     "id": "t07",
     "question": "How does the Analog synthesizer work?",
-    "ground_truth_pages": [[649, 658]],
+    "source": "live_12",
+    "ground_truth_pages": [[649, 657]],
     "category": "factual"
   },
   {
     "id": "t08",
     "question": "How do I edit MPE data in a MIDI clip?",
+    "source": "live_12",
     "ground_truth_pages": [[310, 319]],
     "category": "procedural"
   },
   {
     "id": "t09",
     "question": "What is the Multiband Dynamics effect and how do I use it?",
-    "ground_truth_pages": [[577, 582]],
+    "source": "live_12",
+    "ground_truth_pages": [[577, 581]],
     "category": "factual"
   },
   {
     "id": "t10",
     "question": "How do I use the Capture MIDI feature to save ideas I played?",
+    "source": "live_12",
     "ground_truth_pages": [[400, 402]],
     "category": "procedural"
+  },
+  {
+    "id": "t11",
+    "question": "How do I activate Ableton Cloud on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[23, 24]],
+    "category": "procedural"
+  },
+  {
+    "id": "t12",
+    "question": "How do I load individual drums on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[73, 76]],
+    "category": "procedural"
+  },
+  {
+    "id": "t13",
+    "question": "How does the Slicing playback mode for samples work on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[123, 124]],
+    "category": "factual"
+  },
+  {
+    "id": "t14",
+    "question": "How should you deal with procrastination when making music?",
+    "source": "making_music",
+    "ground_truth_pages": [[65, 67]],
+    "category": "conceptual"
+  },
+  {
+    "id": "t15",
+    "question": "What does voice leading and inversions mean in harmony?",
+    "source": "making_music",
+    "ground_truth_pages": [[225, 228]],
+    "category": "conceptual"
+  },
+  {
+    "id": "t16",
+    "question": "What are three ways to end a song?",
+    "source": "making_music",
+    "ground_truth_pages": [[280, 282]],
+    "category": "conceptual"
   }
 ]
