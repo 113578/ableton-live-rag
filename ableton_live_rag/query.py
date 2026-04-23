@@ -123,9 +123,7 @@ def _build_query_engine(similarity_top_k: int) -> RetrieverQueryEngine:
     )
 
 
-async def ask(
-    question: str, top_k: int = settings.similarity_top_k
-) -> StreamingAnswer:
+async def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswer:
     """
     Постановка вопроса и получение стримингового ответа с источниками.
 
