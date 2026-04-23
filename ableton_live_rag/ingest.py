@@ -8,6 +8,7 @@
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import fitz
 from llama_index.core import Document
@@ -142,7 +143,9 @@ def clean_text(text: str) -> str:
     return text.strip()
 
 
-def section_to_document(doc: fitz.Document, section: Section) -> Document | None:
+def section_to_document(
+    doc: fitz.Document, section: Section, source: str = ""
+) -> Document | None:
     """
     Преобразование раздела TOC в объект LlamaIndex Document с метаданными.
 
@@ -156,6 +159,8 @@ def section_to_document(doc: fitz.Document, section: Section) -> Document | None
         Открытый документ PyMuPDF.
     section : Section
         Раздел с атрибутами ``page_start`` и ``page_end``.
+    source : str, optional
+        Имя исходного PDF (без расширения). Записывается в метаданные.
 
     Returns
     -------
@@ -178,6 +183,7 @@ def section_to_document(doc: fitz.Document, section: Section) -> Document | None
     return Document(
         text=text,
         metadata={
+            "source": source,
             "chapter": section.chapter,
             "section": section.section,
             "subsection": section.title if section.level >= 3 else "",
@@ -192,7 +198,7 @@ def section_to_document(doc: fitz.Document, section: Section) -> Document | None
 
 def load_documents(pdf_path: str | None = None) -> list[Document]:
     """
-    Загрузка PDF и создание списка LlamaIndex Documents из разделов TOC.
+    Загрузка PDF-корпуса и создание списка LlamaIndex Documents из разделов TOC.
 
     Основная точка входа для пайплайна загрузки. Каждый раздел TOC
     становится отдельным ``Document`` с иерархическими метаданными.
@@ -202,7 +208,8 @@ def load_documents(pdf_path: str | None = None) -> list[Document]:
     Parameters
     ----------
     pdf_path : str or None, optional
-        Путь к PDF-файлу. По умолчанию берётся из ``settings.corpus_path``.
+        Путь к PDF-файлу или директории с PDF-файлами. По умолчанию
+        берётся из ``settings.corpus_path``.
 
     Returns
     -------
@@ -210,17 +217,20 @@ def load_documents(pdf_path: str | None = None) -> list[Document]:
         Список ``Document`` объектов, готовых к передаче в ``VectorStoreIndex``.
     """
 
-    path = pdf_path or str(settings.corpus_path)
-    doc = fitz.open(path)
+    root = Path(pdf_path) if pdf_path else settings.corpus_path
+    pdf_files = sorted(root.glob("*.pdf")) if root.is_dir() else [root]
 
-    sections = extract_toc(doc)
     documents: list[Document] = []
 
-    for section in sections:
-        llama_doc = section_to_document(doc, section)
-        if llama_doc is not None:
-            documents.append(llama_doc)
+    for pdf_file in pdf_files:
+        doc = fitz.open(str(pdf_file))
+        source = pdf_file.stem
 
-    doc.close()
+        for section in extract_toc(doc):
+            llama_doc = section_to_document(doc, section, source=source)
+            if llama_doc is not None:
+                documents.append(llama_doc)
+
+        doc.close()
 
     return documents
