@@ -13,4 +13,7 @@ wheels/
 .env
 data/
 eval_results/
-/corpus.pdf
+corpus/
+
+# macOS
+.DS_Store
