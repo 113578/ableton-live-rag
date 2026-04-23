@@ -1,7 +1,7 @@
 [project]
 name = "ableton-live-rag"
 version = "0.3.0"
-description = "RAG-система для документации Ableton Live 12"
+description = "RAG-система для корпуса документации Ableton: Live, Push, Music Strategies"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
