@@ -2,11 +2,12 @@
 Пайплайн запросов: поиск по индексу и генерация ответов.
 """
 
+import asyncio
 from dataclasses import dataclass, field
 from typing import AsyncGenerator, cast
 
 from llama_index.core.prompts import RichPromptTemplate
-from llama_index.core.base.response.schema import AsyncStreamingResponse
+from llama_index.core.base.response.schema import StreamingResponse
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core.response_synthesizers import (
     ResponseMode,
@@ -142,15 +143,17 @@ async def ask(question: str, top_k: int = settings.similarity_top_k) -> Streamin
 
     engine = _build_query_engine(similarity_top_k=top_k)
     response = cast(
-        AsyncStreamingResponse, await engine.aquery(str_or_query_bundle=question)
+        StreamingResponse,
+        await asyncio.to_thread(engine.query, question),
     )
 
     source_nodes = [_to_search_result(node) for node in response.source_nodes]
 
-    return StreamingAnswer(
-        source_nodes=source_nodes,
-        response_gen=response.async_response_gen(),
-    )
+    async def _token_gen() -> AsyncGenerator[str, None]:
+        for token in response.response_gen:
+            yield token
+
+    return StreamingAnswer(source_nodes=source_nodes, response_gen=_token_gen())
 
 
 async def retrieve(
@@ -176,7 +179,7 @@ async def retrieve(
     retriever = VectorIndexRetriever(
         index=vector_index, similarity_top_k=similarity_top_k
     )
-    nodes = await retriever.aretrieve(str_or_query_bundle=query)
+    nodes = await asyncio.to_thread(retriever.retrieve, query)
 
     return [_to_search_result(node) for node in nodes]
 
