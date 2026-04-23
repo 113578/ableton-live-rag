@@ -131,30 +131,40 @@ def ndcg_at_k(relevances: list[bool], k: int | None = None) -> float:
 
 
 def is_page_relevant(
+    source: str,
     page: int,
+    ground_truth_source: str,
     ground_truth_ranges: list[list[int]],
 ) -> bool:
     """
-    Проверка попадания страницы в один из диапазонов ground truth.
+    Проверка релевантности страницы: совпадение источника и попадание в диапазон.
 
     Parameters
     ----------
+    source : str
+        Источник найденного чанка (имя PDF без расширения).
     page : int
         Номер страницы (1-indexed).
+    ground_truth_source : str
+        Источник эталонного ответа.
     ground_truth_ranges : list[list[int]]
         Список пар ``[start, end]`` — эталонные диапазоны страниц.
 
     Returns
     -------
     bool
-        ``True`` если страница попадает хотя бы в один диапазон.
+        ``True`` если источник совпадает и страница попадает хотя бы в один диапазон.
     """
+
+    if source != ground_truth_source:
+        return False
 
     return any(start <= page <= end for start, end in ground_truth_ranges)
 
 
 def compute_relevances(
-    retrieved_pages: list[int],
+    retrieved: list[tuple[str, int]],
+    ground_truth_source: str,
     ground_truth_ranges: list[list[int]],
 ) -> list[bool]:
     """
@@ -162,8 +172,10 @@ def compute_relevances(
 
     Parameters
     ----------
-    retrieved_pages : list[int]
-        Список значений ``page_start`` из метаданных найденных чанков.
+    retrieved : list[tuple[str, int]]
+        Список пар ``(source, page_start)`` из метаданных найденных чанков.
+    ground_truth_source : str
+        Источник эталонного ответа.
     ground_truth_ranges : list[list[int]]
         Список пар ``[start, end]`` — эталонные диапазоны страниц.
 
@@ -173,7 +185,10 @@ def compute_relevances(
         Список булевых значений: ``True`` если чанк релевантен.
     """
 
-    return [is_page_relevant(p, ground_truth_ranges) for p in retrieved_pages]
+    return [
+        is_page_relevant(s, p, ground_truth_source, ground_truth_ranges)
+        for s, p in retrieved
+    ]
 
 
 def count_total_relevant(ground_truth_ranges: list[list[int]]) -> int:

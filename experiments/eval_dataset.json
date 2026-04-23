@@ -2,241 +2,449 @@
   {
     "id": "q01",
     "question": "What is the difference between Session View and Arrangement View?",
-    "ground_truth_pages": [[33, 35], [145, 147], [167, 169]],
+    "source": "live_12",
+    "ground_truth_pages": [[33, 34], [145, 147], [167, 170]],
     "category": "conceptual"
   },
   {
     "id": "q02",
     "question": "How do I warp an audio clip to match the tempo of my project?",
-    "ground_truth_pages": [[218, 231]],
+    "source": "live_12",
+    "ground_truth_pages": [[218, 228]],
     "category": "procedural"
   },
   {
     "id": "q03",
     "question": "How can I set up a sidechain compressor in Ableton Live?",
-    "ground_truth_pages": [[534, 536]],
+    "source": "live_12",
+    "ground_truth_pages": [[534, 535]],
     "category": "procedural"
   },
   {
     "id": "q04",
     "question": "What are Follow Actions and how do I use them to create variations?",
+    "source": "live_12",
     "ground_truth_pages": [[346, 351]],
     "category": "procedural"
   },
   {
     "id": "q05",
     "question": "How do I route audio from one track to another?",
-    "ground_truth_pages": [[352, 373]],
+    "source": "live_12",
+    "ground_truth_pages": [[360, 363]],
     "category": "procedural"
   },
   {
     "id": "q06",
-    "question": "How do I freeze and flatten a track to save CPU?",
-    "ground_truth_pages": [[927, 928]],
+    "question": "How do I freeze a track to save CPU?",
+    "source": "live_12",
+    "ground_truth_pages": [[927, 927]],
     "category": "procedural"
   },
   {
     "id": "q07",
     "question": "What is the Operator synthesizer and what are its main features?",
-    "ground_truth_pages": [[700, 717]],
+    "source": "live_12",
+    "ground_truth_pages": [[700, 710]],
     "category": "factual"
   },
   {
     "id": "q08",
     "question": "How do I record and edit automation envelopes?",
+    "source": "live_12",
     "ground_truth_pages": [[470, 482]],
     "category": "procedural"
   },
   {
     "id": "q09",
-    "question": "What keyboard shortcut toggles between Session and Arrangement View?",
-    "ground_truth_pages": [[955, 956]],
+    "question": "What keyboard shortcuts show and hide Live's views?",
+    "source": "live_12",
+    "ground_truth_pages": [[955, 955]],
     "category": "factual"
   },
   {
     "id": "q10",
     "question": "How do I use the browser to search for and preview sounds?",
-    "ground_truth_pages": [[56, 66], [109, 112]],
+    "source": "live_12",
+    "ground_truth_pages": [[59, 66], [109, 111]],
     "category": "procedural"
   },
   {
     "id": "q11",
     "question": "How do I set up MIDI mapping for a hardware controller?",
+    "source": "live_12",
     "ground_truth_pages": [[810, 818]],
     "category": "procedural"
   },
   {
     "id": "q12",
     "question": "How do I export and render audio from my Live set?",
-    "ground_truth_pages": [[118, 124]],
+    "source": "live_12",
+    "ground_truth_pages": [[118, 123]],
     "category": "procedural"
   },
   {
     "id": "q13",
     "question": "What are Instrument Racks and how do they work?",
-    "ground_truth_pages": [[450, 468]],
+    "source": "live_12",
+    "ground_truth_pages": [[450, 459]],
     "category": "conceptual"
   },
   {
     "id": "q14",
     "question": "What parameters does the Compressor audio effect have?",
-    "ground_truth_pages": [[531, 536]],
+    "source": "live_12",
+    "ground_truth_pages": [[531, 535]],
     "category": "factual"
   },
   {
     "id": "q15",
     "question": "What is Comping and how do I use it to create the best take?",
+    "source": "live_12",
     "ground_truth_pages": [[409, 414]],
     "category": "procedural"
   },
   {
     "id": "q16",
     "question": "How do I set up Ableton Link to sync with other devices on the network?",
-    "ground_truth_pages": [[918, 920]],
+    "source": "live_12",
+    "ground_truth_pages": [[918, 919]],
     "category": "procedural"
   },
   {
     "id": "q17",
     "question": "What are the different track types available in Ableton Live?",
+    "source": "live_12",
     "ground_truth_pages": [[35, 38], [378, 382]],
     "category": "factual"
   },
   {
     "id": "q18",
     "question": "How do I use the Wavetable synthesizer to create sounds?",
+    "source": "live_12",
     "ground_truth_pages": [[759, 768]],
     "category": "procedural"
   },
   {
     "id": "q19",
     "question": "What is the difference between audio clips and MIDI clips?",
-    "ground_truth_pages": [[38, 41]],
+    "source": "live_12",
+    "ground_truth_pages": [[38, 40]],
     "category": "conceptual"
   },
   {
     "id": "q20",
     "question": "How do I configure an external audio interface in Live's preferences?",
-    "ground_truth_pages": [[25, 26]],
+    "source": "live_12",
+    "ground_truth_pages": [[25, 25]],
     "category": "procedural"
   },
   {
     "id": "q21",
     "question": "How does Stem Separation work in Ableton Live?",
+    "source": "live_12",
     "ground_truth_pages": [[415, 419]],
     "category": "procedural"
   },
   {
     "id": "q22",
     "question": "What are Groove templates and how do I apply them to clips?",
+    "source": "live_12",
     "ground_truth_pages": [[325, 330]],
     "category": "procedural"
   },
   {
     "id": "q23",
     "question": "How do I convert an audio clip to MIDI?",
+    "source": "live_12",
     "ground_truth_pages": [[320, 324]],
     "category": "procedural"
   },
   {
     "id": "q24",
     "question": "What is Max for Live and what can it do?",
+    "source": "live_12",
     "ground_truth_pages": [[769, 774]],
     "category": "conceptual"
   },
   {
     "id": "q25",
     "question": "How does Scale Awareness work in Live 12?",
-    "ground_truth_pages": [[44, 46]],
+    "source": "live_12",
+    "ground_truth_pages": [[44, 45]],
     "category": "conceptual"
   },
   {
     "id": "q26",
     "question": "How do I set the Dry/Wet knob on a Reverb effect?",
-    "ground_truth_pages": [[592, 596]],
+    "source": "live_12",
+    "ground_truth_pages": [[592, 595]],
     "category": "procedural"
   },
   {
     "id": "q27",
     "question": "How does the EQ Eight audio effect work?",
-    "ground_truth_pages": [[551, 554]],
+    "source": "live_12",
+    "ground_truth_pages": [[551, 553]],
     "category": "factual"
   },
   {
     "id": "q28",
     "question": "How do I use the Hybrid Reverb effect?",
+    "source": "live_12",
     "ground_truth_pages": [[565, 571]],
     "category": "procedural"
   },
   {
     "id": "q29",
     "question": "How do I record MIDI patterns using overdub?",
-    "ground_truth_pages": [[390, 402]],
+    "source": "live_12",
+    "ground_truth_pages": [[391, 394]],
     "category": "procedural"
   },
   {
     "id": "q30",
     "question": "What is the Drift synthesizer and how does it work?",
-    "ground_truth_pages": [[667, 675]],
+    "source": "live_12",
+    "ground_truth_pages": [[667, 674]],
     "category": "factual"
   },
   {
     "id": "q31",
     "question": "How do I use the Delay audio effect?",
-    "ground_truth_pages": [[542, 544]],
+    "source": "live_12",
+    "ground_truth_pages": [[542, 543]],
     "category": "procedural"
   },
   {
     "id": "q32",
     "question": "How do I create and use Group Tracks?",
-    "ground_truth_pages": [[379, 381]],
+    "source": "live_12",
+    "ground_truth_pages": [[379, 380]],
     "category": "procedural"
   },
   {
     "id": "q33",
     "question": "What are Warp Modes and when should I use each one?",
+    "source": "live_12",
     "ground_truth_pages": [[229, 231]],
     "category": "conceptual"
   },
   {
     "id": "q34",
     "question": "How do I use the crossfader in Ableton Live?",
-    "ground_truth_pages": [[383, 386]],
+    "source": "live_12",
+    "ground_truth_pages": [[383, 385]],
     "category": "procedural"
   },
   {
     "id": "q35",
     "question": "How does the Arpeggiator MIDI effect work?",
-    "ground_truth_pages": [[636, 639]],
+    "source": "live_12",
+    "ground_truth_pages": [[636, 638]],
     "category": "factual"
   },
   {
     "id": "q36",
     "question": "How do I use the Looper effect for live performance?",
-    "ground_truth_pages": [[573, 577]],
+    "source": "live_12",
+    "ground_truth_pages": [[573, 576]],
     "category": "procedural"
   },
   {
     "id": "q37",
     "question": "What is the Auto Filter effect and what parameters does it have?",
-    "ground_truth_pages": [[503, 511]],
+    "source": "live_12",
+    "ground_truth_pages": [[503, 510]],
     "category": "factual"
   },
   {
     "id": "q38",
     "question": "How do I set up return tracks and sends?",
-    "ground_truth_pages": [[381, 383]],
+    "source": "live_12",
+    "ground_truth_pages": [[381, 382]],
     "category": "procedural"
   },
   {
     "id": "q39",
     "question": "How do I use Tuning Systems in Live 12?",
+    "source": "live_12",
     "ground_truth_pages": [[331, 339]],
     "category": "procedural"
   },
   {
     "id": "q40",
     "question": "How do I use the Simpler instrument to play samples?",
+    "source": "live_12",
     "ground_truth_pages": [[736, 746]],
     "category": "procedural"
+  },
+  {
+    "id": "q41",
+    "question": "How do I connect Push 3 to a computer?",
+    "source": "push_3",
+    "ground_truth_pages": [[9, 9]],
+    "category": "procedural"
+  },
+  {
+    "id": "q42",
+    "question": "How do I authorize my Live license on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[16, 17]],
+    "category": "procedural"
+  },
+  {
+    "id": "q43",
+    "question": "How do I use Ableton Link on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[23, 23]],
+    "category": "procedural"
+  },
+  {
+    "id": "q44",
+    "question": "How do I browse sounds and presets on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[25, 29]],
+    "category": "procedural"
+  },
+  {
+    "id": "q45",
+    "question": "How do I map a macro to a device parameter on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[37, 38]],
+    "category": "procedural"
+  },
+  {
+    "id": "q46",
+    "question": "How do I pair Push with Live for continuity?",
+    "source": "push_3",
+    "ground_truth_pages": [[57, 60]],
+    "category": "procedural"
+  },
+  {
+    "id": "q47",
+    "question": "How do I step sequence beats on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[77, 79]],
+    "category": "procedural"
+  },
+  {
+    "id": "q48",
+    "question": "How do I record MIDI in real-time on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[92, 95]],
+    "category": "procedural"
+  },
+  {
+    "id": "q49",
+    "question": "How does Capturing MIDI work on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[99, 99]],
+    "category": "procedural"
+  },
+  {
+    "id": "q50",
+    "question": "How do I warp audio clips on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[115, 117]],
+    "category": "procedural"
+  },
+  {
+    "id": "q51",
+    "question": "How do I record parameter automation on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[129, 131]],
+    "category": "procedural"
+  },
+  {
+    "id": "q52",
+    "question": "What is the Session Pad Mode on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[142, 142]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q53",
+    "question": "What are three ways to start a new music project?",
+    "source": "making_music",
+    "ground_truth_pages": [[13, 15]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q54",
+    "question": "What is the Mise en Place approach to music production?",
+    "source": "making_music",
+    "ground_truth_pages": [[29, 32]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q55",
+    "question": "How can arbitrary constraints help creativity?",
+    "source": "making_music",
+    "ground_truth_pages": [[33, 36]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q56",
+    "question": "What does 'Write drunk; edit sober' mean in music production?",
+    "source": "making_music",
+    "ground_truth_pages": [[37, 40]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q57",
+    "question": "How should you choose a tempo for a track?",
+    "source": "making_music",
+    "ground_truth_pages": [[41, 43]],
+    "category": "procedural"
+  },
+  {
+    "id": "q58",
+    "question": "How can presets be used as starting points?",
+    "source": "making_music",
+    "ground_truth_pages": [[50, 52]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q59",
+    "question": "What is the Tyranny of the Default in music production?",
+    "source": "making_music",
+    "ground_truth_pages": [[53, 55]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q60",
+    "question": "What does Breadth Before Depth mean when progressing with a track?",
+    "source": "making_music",
+    "ground_truth_pages": [[92, 94]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q61",
+    "question": "What is a 3+3+2 rhythm pattern?",
+    "source": "making_music",
+    "ground_truth_pages": [[133, 137]],
+    "category": "factual"
+  },
+  {
+    "id": "q62",
+    "question": "How can ghost notes be used when programming beats?",
+    "source": "making_music",
+    "ground_truth_pages": [[149, 152]],
+    "category": "procedural"
+  },
+  {
+    "id": "q63",
+    "question": "What are the basics of creating harmony?",
+    "source": "making_music",
+    "ground_truth_pages": [[203, 210]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q64",
+    "question": "What does 'arranging as a subtractive process' mean?",
+    "source": "making_music",
+    "ground_truth_pages": [[259, 262]],
+    "category": "conceptual"
   }
 ]
