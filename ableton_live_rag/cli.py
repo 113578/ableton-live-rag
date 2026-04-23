@@ -2,6 +2,8 @@
 Интерфейс командной строки RAG-системы.
 """
 
+import asyncio
+
 import typer
 from rich.console import Console
 from rich.panel import Panel
@@ -86,39 +88,40 @@ def ask(
     console.print(Panel(question, title="[blue]Вопрос[/blue]", border_style="blue"))
     console.print()
 
-    with console.status("[dim]Поиск в документации...[/dim]"):
-        answer = query_ask(question, top_k=k)
+    async def _run() -> None:
+        with console.status("[dim]Поиск в документации...[/dim]"):
+            answer = await query_ask(question, top_k=k)
 
-    # Стриминг ответа
-    console.print(Panel.fit("[green]Ответ[/green]", border_style="green"))
+        console.print(Panel.fit("[green]Ответ[/green]", border_style="green"))
 
-    for token in answer.response_gen:
-        console.print(token, end="")
+        async for token in answer.response_gen:
+            console.print(token, end="")
 
-    console.print("\n")
+        console.print("\n")
 
-    # Таблица источников
-    if answer.source_nodes:
-        table = Table(title="Источники", show_lines=True)
-        table.add_column("#", style="cyan", width=4)
-        table.add_column("Глава / Раздел", style="white")
-        table.add_column("Стр.", style="yellow", width=6)
-        table.add_column("Score", style="green", width=7)
+        if answer.source_nodes:
+            table = Table(title="Источники", show_lines=True)
+            table.add_column("#", style="cyan", width=4)
+            table.add_column("Глава / Раздел", style="white")
+            table.add_column("Стр.", style="yellow", width=6)
+            table.add_column("Score", style="green", width=7)
 
-        for i, node in enumerate(answer.source_nodes, 1):
-            chapter_section = node.chapter
+            for i, node in enumerate(answer.source_nodes, 1):
+                chapter_section = node.chapter
 
-            if node.section:
-                chapter_section += f" › {node.section}"
+                if node.section:
+                    chapter_section += f" › {node.section}"
 
-            table.add_row(
-                str(i),
-                chapter_section,
-                str(node.page_start),
-                f"{node.score:.3f}",
-            )
+                table.add_row(
+                    str(i),
+                    chapter_section,
+                    str(node.page_start),
+                    f"{node.score:.3f}",
+                )
 
-        console.print(table)
+            console.print(table)
+
+    asyncio.run(_run())
 
 
 @app.command()
@@ -146,7 +149,7 @@ def search(
     llm.setup()
 
     with console.status("[dim]Поиск...[/dim]"):
-        results = retrieve(query, similarity_top_k=similarity_top_k)
+        results = asyncio.run(retrieve(query, similarity_top_k=similarity_top_k))
 
     for i, r in enumerate(results, 1):
         meta = f"Глава: {r.chapter or '?'}"
