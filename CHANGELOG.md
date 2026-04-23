@@ -2,6 +2,111 @@
 
 <!-- version list -->
 
+## v0.3.0 (2026-04-23)
+
+### Bug Fixes
+
+- Fix async qdrant client ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Fixed last page bug and styled code ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Fixed versioning ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Removed model choosing ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Use DVC stage instead of single add ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Use OpenAI-like API instead of plain OpenAI
+  ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+### Build System
+
+- Add pytest ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added DVC dependency ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added Python version ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added scikit-learn dependency ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Initialized uv project ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Replaced OpenAI API for OpenAI-like API
+  ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Updated dependencies ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Updated semantic-release settings ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+### Documentation
+
+- Updated project name ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Updated README.md ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Wrote README.md ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+### Features
+
+- Add async support ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Add corpus support ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Add new dataset records and update metrics
+  ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Add new docs for corpus ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added DVC support ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added experiments for retrievers ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added multiple Qdrant collections and embedders support
+  ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added RAG baseline ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added reranker experiments ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added retrieval optimization ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added retriever experiments ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added script for building eval indexes ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+- Added utils module ([#20](https://github.com/113578/ableton-live-rag/pull/20),
+  [`f5ebfe4`](https://github.com/113578/ableton-live-rag/commit/f5ebfe4131f675d6ed0b565be2b6084e2d96bd88))
+
+
 ## v0.2.0 (2026-03-31)
 
 ### Bug Fixes
