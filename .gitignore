@@ -14,6 +14,7 @@ wheels/
 data/
 eval_results/
 corpus/
+.deepeval/
 
 # macOS
 .DS_Store
