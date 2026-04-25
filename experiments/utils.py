@@ -10,7 +10,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.core import Settings as LlamaSettings
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from llama_index.core import VectorStoreIndex
 from llama_index.core.schema import BaseNode, NodeWithScore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
@@ -29,23 +28,11 @@ from experiments.metrics import (
     recall_at_k,
 )
 
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
 _EXPERIMENTS_DIR = Path(__file__).resolve().parent
 DATASET_PATH = _EXPERIMENTS_DIR / "eval_dataset.json"
 
-_COLUMN_NAMES: dict[str, str] = {
-    "hit_rate": "Hit Rate",
-    "mrr": "MRR",
-    "precision": "P@k",
-    "recall": "R@k",
-    "ndcg": "NDCG@k",
-    "avg_latency_s": "Latency (s)",
-    "answer_relevancy": "Answer Relevancy",
-    "faithfulness": "Faithfulness",
-    "contextual_relevancy": "Contextual Relevancy",
-    "candidate_k": "Pool",
-    "multiplier": "Pool ×",
-    "base_retriever": "Base Retriever",
-}
 
 console = Console()
 
@@ -268,48 +255,9 @@ def format_result_summary(result: dict) -> str:
     )
 
 
-def _col_header(key: str) -> str:
-    return _COLUMN_NAMES.get(key, key.replace("_", " ").title())
-
-
-def _fmt(val: object) -> str:
-    if isinstance(val, float):
-        return f"{val:.3f}"
-
-    return str(val)
-
-
-def _results_to_md(results: list[dict]) -> str:
-    """Конвертация списка результатов в Markdown-таблицу (без поля details)."""
-
-    rows = [{k: v for k, v in r.items() if k != "details"} for r in results]
-    cols = list(rows[0].keys())
-
-    header = "| " + " | ".join(_col_header(c) for c in cols) + " |"
-    sep = (
-        "| "
-        + " | ".join(
-            "---:"
-            if isinstance(rows[0].get(c), (int, float))
-            and not isinstance(rows[0].get(c), bool)
-            else ":---"
-            for c in cols
-        )
-        + " |"
-    )
-    data = [
-        "| " + " | ".join(_fmt(row.get(c, "")) for c in cols) + " |" for row in rows
-    ]
-
-    return "\n".join([header, sep, *data, ""])
-
-
 def save_results(results: list[dict], results_dir: Path) -> Path:
     """
-    Сохранение результатов в JSON и Markdown.
-
-    JSON содержит полные данные включая ``details`` по каждому вопросу.
-    Markdown содержит сводную таблицу без ``details``.
+    Сохранение результатов в JSON.
 
     Parameters
     ----------
@@ -321,20 +269,16 @@ def save_results(results: list[dict], results_dir: Path) -> Path:
     Returns
     -------
     Path
-        Путь к сохранённому JSON-файлу.
+        Путь к сохранённому файлу.
     """
 
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    ts = time.strftime("%Y%m%d_%H%M%S")
-    json_path = results_dir / f"eval_{ts}.json"
+    json_path = results_dir / f"eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
 
     with open(json_path, "w") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
-    md_path = results_dir / f"eval_{ts}.md"
-    md_path.write_text(_results_to_md(results), encoding="utf-8")
-
-    console.print(f"[green]Результаты сохранены: {json_path}, {md_path}[/green]")
+    console.print(f"[green]Результаты сохранены: {json_path}[/green]")
 
     return json_path
