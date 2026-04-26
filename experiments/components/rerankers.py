@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from llama_index.core.schema import NodeWithScore
+from sentence_transformers import CrossEncoder
 
 RERANKER_MODELS: dict[str, str] = {
     "minilm-l6": "cross-encoder/ms-marco-MiniLM-L-6-v2",
@@ -37,14 +38,14 @@ class RerankerConfig:
         self, query: str, nodes: list[NodeWithScore], top_k: int
     ) -> list[NodeWithScore]:
         """
-        Выполнение ранжирования.
+        Запуск ранжирования.
 
         Parameters
         ----------
         query : str
             Поисковый запрос.
         nodes : list[NodeWithScore]
-            Кандидаты от базового компонента поиска.
+            Кандидаты от базового ретривера.
         top_k : int
             Количество результатов после ранжирования.
 
@@ -58,24 +59,6 @@ class RerankerConfig:
 
 
 def _make_cross_encoder(model_id: str, name: str) -> RerankerConfig:
-    """
-    Создание RerankerConfig на основе cross-encoder модели.
-
-    Parameters
-    ----------
-    model_id : str
-        Идентификатор модели на HuggingFace.
-    name : str
-        Короткое имя для отображения в таблице.
-
-    Returns
-    -------
-    RerankerConfig
-        Конфигурация ранжировщика.
-    """
-
-    from sentence_transformers import CrossEncoder
-
     model = CrossEncoder(model_id)
 
     def _rerank(
@@ -103,17 +86,16 @@ def _make_cross_encoder(model_id: str, name: str) -> RerankerConfig:
     )
 
 
-def build_all_rerankers(
+def build_rerankers(
     selected: list[str] | None = None,
 ) -> list[RerankerConfig]:
     """
-    Создание всех ранжировщиков для эксперимента.
+    Создание конфигураций ранжировщиков для эксперимента.
 
     Parameters
     ----------
     selected : list[str] or None, optional
-        Список ключей из ``RERANKER_MODELS`` для загрузки.
-        ``None`` означает все доступные модели.
+        Ключи из ``RERANKER_MODELS``. ``None`` — все доступные модели.
 
     Returns
     -------
