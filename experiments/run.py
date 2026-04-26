@@ -9,6 +9,7 @@
     uv run experiments/run.py retriever --top-k 5
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5
+    uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
     uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
 """
 
@@ -295,6 +296,12 @@ def generator(
         "-r",
         help="Базовый ретривер (например hybrid_rrf/e5, vector/bge, bm25)",
     ),
+    reranker_name: str | None = typer.Option(
+        None, "--reranker", help="Имя ранжировщика (опционально)"
+    ),
+    candidate_k: int = typer.Option(
+        15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
+    ),
     concurrency: int = typer.Option(
         16, "--concurrency", "-c", help="Число параллельных запросов"
     ),
@@ -314,6 +321,12 @@ def generator(
     base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
     console.print(f"[green]Базовый ретривер: {base_retriever.name}[/green]")
 
+    selected_reranker: RerankerConfig | None = None
+
+    if reranker_name is not None:
+        reranker_configs = build_rerankers()
+        selected_reranker = find_by_name(reranker_configs, reranker_name, "Ранжировщик")
+
     console.print("[dim]Загрузка моделей генераторов...[/dim]")
     generator_configs = build_generators()
     console.print(f"[green]Подготовлено {len(generator_configs)} генераторов[/green]")
@@ -321,7 +334,10 @@ def generator(
     metrics = build_judge_metrics()
 
     retrieve_fn = build_retrieval_pipeline(
-        retriever=base_retriever, reranker=None, top_k=top_k, candidate_k=top_k
+        retriever=base_retriever,
+        reranker=selected_reranker,
+        top_k=top_k,
+        candidate_k=candidate_k,
     )
 
     async def _run() -> list[dict]:
@@ -354,11 +370,9 @@ def end2end(
         5, "--top-k", "-k", help="Количество фрагментов контекста"
     ),
     retriever_name: str = typer.Option(
-        "hybrid_rrf/e5", "--retriever", "-r", help="Имя базового ретривера"
+        "hybrid_rrf/e5", "--retriever", "-r", help="Базовый ретривер"
     ),
-    reranker_name: str | None = typer.Option(
-        None, "--reranker", help="Имя ранжировщика (опционально)"
-    ),
+    reranker_name: str | None = typer.Option(None, "--reranker", help="Ранжировщик"),
     candidate_k: int = typer.Option(
         15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
     ),
@@ -370,20 +384,65 @@ def end2end(
     ),
 ) -> None:
     """
-    Сквозная оценка RAG-пайплайна: ретривер (+ ранжировщик) → генератор → DeepEval.
+    Сквозная оценка всех компонентов.
     """
 
     indexes, nodes, dataset = prepare_experiment()
-
     retriever_configs = build_retrievers(
         indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
     )
+
+    retriever_results: list[dict] = []
+
+    for config in retriever_configs:
+        console.print(f"[bold]▶ {config.name}[/bold] — {config.description}")
+        per_q, total_time = evaluate_dataset(
+            retrieve_fn=lambda q, c=config: c.retrieve(query=q, top_k=top_k),
+            dataset=dataset,
+        )
+        result = {
+            "retriever": config.name,
+            "description": config.description,
+            "category": config.category,
+            **aggregate_retrieval_metrics(per_q, total_time),
+        }
+        retriever_results.append(result)
+        console.print(format_retrieval_summary(result) + "\n")
+
+    category_order = {"sparse": 0, "dense": 1, "hybrid": 2}
+    retriever_results.sort(key=lambda r: category_order.get(r["category"], 99))
+    _print_retriever_table(retriever_results, top_k)
+
     base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
+    console.print(
+        f"[green]Базовый ретривер для фаз 2–3: {base_retriever.name}[/green]\n"
+    )
+
+    reranker_cfgs = build_rerankers()
+    reranker_results: list[dict] = []
+
+    console.print("[bold]▶ baseline[/bold] — no reranking (pool=top_k)")
+    reranker_results.append(
+        _evaluate_reranker(base_retriever, None, dataset, top_k, top_k)
+    )
+    console.print(format_retrieval_summary(reranker_results[-1]) + "\n")
+
+    for rerank_cfg in reranker_cfgs:
+        for mult in _RERANKER_MULTIPLIERS:
+            ck = top_k * mult
+            console.print(
+                f"[bold]▶ {rerank_cfg.name} (pool={ck})[/bold] — {rerank_cfg.description}"
+            )
+            reranker_results.append(
+                _evaluate_reranker(base_retriever, rerank_cfg, dataset, top_k, ck)
+            )
+            console.print(format_retrieval_summary(reranker_results[-1]) + "\n")
+
+    _print_reranker_table(reranker_results, top_k)
 
     selected_reranker: RerankerConfig | None = None
     if reranker_name is not None:
-        reranker_configs = build_rerankers()
-        selected_reranker = find_by_name(reranker_configs, reranker_name, "Ранжировщик")
+        selected_reranker = find_by_name(reranker_cfgs, reranker_name, "Ранжировщик")
 
     pipeline_label = (
         f"{base_retriever.name} → {selected_reranker.name}"
@@ -423,11 +482,18 @@ def end2end(
 
         return results
 
-    results = asyncio.run(_run())
-    _print_generator_table(results, title=f"End-to-end: {pipeline_label}")
+    generator_results = asyncio.run(_run())
+    _print_generator_table(generator_results, title=f"End-to-end: {pipeline_label}")
 
     if save:
-        save_results(results, RESULTS_DIR / "end2end")
+        save_results(
+            {
+                "retriever": retriever_results,
+                "reranker": reranker_results,
+                "generator": generator_results,
+            },
+            RESULTS_DIR / "end2end",
+        )
 
 
 if __name__ == "__main__":

@@ -468,13 +468,13 @@ def build_judge_metrics() -> dict[str, BaseMetric]:
     return build_metrics(judge=judge)
 
 
-def save_results(results: list[dict], results_dir: Path) -> Path:
+def save_results(results: list[dict] | dict, results_dir: Path) -> Path:
     """
     Сохранение результатов в JSON.
 
     Parameters
     ----------
-    results : list[dict]
+    results : list[dict] or dict
         Результаты экспериментов.
     results_dir : Path
         Директория для сохранения.
