@@ -24,6 +24,8 @@ def setup() -> None:
 
     if settings.llm_provider == LLMProvider.ollama:
         _setup_ollama()
+    elif settings.llm_provider == LLMProvider.openai:
+        _setup_openai()
     elif settings.llm_provider == LLMProvider.vllm:
         _setup_vllm()
 
@@ -37,6 +39,18 @@ def _setup_ollama() -> None:
         model=settings.ollama_model,
         base_url=settings.ollama_base_url,
         request_timeout=settings.ollama_request_timeout,
+    )
+
+
+def _setup_openai() -> None:
+    """Подключение модели через OpenAI API."""
+
+    from llama_index.llms.openai import OpenAI
+
+    LlamaIndexSettings.llm = OpenAI(
+        model=settings.openai_model,
+        api_key=settings.openai_api_key or None,
+        max_tokens=settings.num_output,
     )
 
 
