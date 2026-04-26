@@ -24,8 +24,8 @@ class LlamaIndexJudge(DeepEvalBaseLLM):
         self._name = name
         super().__init__(model=name)
 
-    def load_model(self) -> LLM:
-        return self._llm
+    def load_model(self) -> DeepEvalBaseLLM:
+        return self
 
     def generate(self, prompt: str) -> str:
         return str(self._llm.complete(prompt))
