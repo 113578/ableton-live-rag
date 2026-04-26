@@ -2,6 +2,50 @@
 
 <!-- version list -->
 
+## v0.4.0 (2026-04-26)
+
+### Bug Fixes
+
+- Fix end2end evaluation pipeline ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Remove md saving ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+### Build System
+
+- Add deepeval ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Add openai api support ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Update repo desc ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+### Documentation
+
+- Update repo desc ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+### Features
+
+- Add generation optimization ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Add generator and end2end experiments ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Add generator experiments ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Add markdown results ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+- Add openai api support ([#21](https://github.com/113578/ableton-live-rag/pull/21),
+  [`e467b0b`](https://github.com/113578/ableton-live-rag/commit/e467b0bb9ae5d3be46a8a8891edc2c787d424537))
+
+
 ## v0.3.0 (2026-04-23)
 
 ### Bug Fixes
