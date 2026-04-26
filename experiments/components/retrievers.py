@@ -1,5 +1,5 @@
 """
-Конфигурации компонент поиска для экспериментов.
+Конфигурации ретриверов для экспериментов.
 """
 
 from collections.abc import Callable
@@ -11,26 +11,26 @@ from llama_index.core import VectorStoreIndex
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.schema import BaseNode, NodeWithScore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.retrievers.bm25 import BM25Retriever
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from ableton_live_rag.config import EmbeddingModelConfig
-from experiments.utils import make_embed_model
 
 
 @dataclass
 class RetrieverConfig:
     """
-    Обёртка над компонентом поиска с единым интерфейсом для оценки.
+    Обёртка над ретривером с единым интерфейсом для оценки.
 
     Attributes
     ----------
     name : str
-        Название компонента поиска.
+        Название ретривера.
     description : str
-        Описание компонента поиска.
+        Описание ретривера.
     category : str
-        Категория: sparse, dense, hybrid.
+        Категория ретривера: ``sparse``, ``dense``, ``hybrid``.
     """
 
     name: str
@@ -40,7 +40,7 @@ class RetrieverConfig:
 
     def retrieve(self, query: str, top_k: int = 5) -> list[NodeWithScore]:
         """
-        Выполнение поиска.
+        Запуск поиска.
 
         Parameters
         ----------
@@ -58,21 +58,29 @@ class RetrieverConfig:
         return self._retrieve_fn(query, top_k)
 
 
-def _make_bm25(bm25) -> RetrieverConfig:  # noqa: ANN001
+def make_embed_model(emb: EmbeddingModelConfig) -> HuggingFaceEmbedding:
     """
-    Создание BM25.
+    Создание HuggingFaceEmbedding из конфигурации.
 
     Parameters
     ----------
-    bm25 : BM25Retriever
-        Готовый BM25-ретривер.
+    emb : EmbeddingModelConfig
+        Конфигурация модели эмбеддингов.
 
     Returns
     -------
-    RetrieverConfig
-        Конфигурация компонента поиска.
+    HuggingFaceEmbedding
+        Модель эмбеддингов.
     """
 
+    return HuggingFaceEmbedding(
+        model_name=emb.model_id,
+        query_instruction=emb.query_instruction or None,
+        text_instruction=emb.text_instruction or None,
+    )
+
+
+def _make_bm25(bm25: BM25Retriever) -> RetrieverConfig:
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
         bm25.similarity_top_k = top_k
         return bm25.retrieve(query)
@@ -86,20 +94,6 @@ def _make_bm25(bm25) -> RetrieverConfig:  # noqa: ANN001
 
 
 def _make_tfidf(nodes: list[BaseNode]) -> RetrieverConfig:
-    """
-    Создание TF-IDF.
-
-    Parameters
-    ----------
-    nodes : list[BaseNode]
-        Узлы для построения TF-IDF матрицы.
-
-    Returns
-    -------
-    RetrieverConfig
-        Конфигурация компонента поиска.
-    """
-
     texts = [n.get_content() for n in nodes]
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(raw_documents=texts)
@@ -126,24 +120,6 @@ def _make_vector(
     model_name: str,
     embed_model: HuggingFaceEmbedding,
 ) -> RetrieverConfig:
-    """
-    Векторный поиск через косинусную близость.
-
-    Parameters
-    ----------
-    index : VectorStoreIndex
-        Индекс.
-    model_name : str
-        Название модели эмбеддингов.
-    embed_model : HuggingFaceEmbedding
-        Модель эмбеддингов для запросов.
-
-    Returns
-    -------
-    RetrieverConfig
-        Конфигурация компонента поиска.
-    """
-
     retriever = VectorIndexRetriever(index=index, similarity_top_k=5)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
@@ -164,24 +140,6 @@ def _reciprocal_rank_fusion(
     top_k: int,
     rrf_k: int = 60,
 ) -> list[NodeWithScore]:
-    """
-    Объединение нескольких ранжированных списков через Reciprocal Rank Fusion.
-
-    Parameters
-    ----------
-    results_list : list[list[NodeWithScore]]
-        Списки ранжированных результатов от разных компонент поиска.
-    top_k : int
-        Количество результатов в итоговом списке.
-    rrf_k : int, optional
-        Константа сглаживания RRF (по умолчанию 60).
-
-    Returns
-    -------
-    list[NodeWithScore]
-        Объединённый ранжированный список.
-    """
-
     scores: dict[str, float] = {}
     nodes_map: dict[str, NodeWithScore] = {}
 
@@ -203,30 +161,10 @@ def _reciprocal_rank_fusion(
 
 def _make_hybrid(
     index: VectorStoreIndex,
-    bm25,  # noqa: ANN001
+    bm25: BM25Retriever,
     model_name: str,
     embed_model: HuggingFaceEmbedding,
 ) -> RetrieverConfig:
-    """
-    Гибридный поиск: vector + BM25 с Reciprocal Rank Fusion.
-
-    Parameters
-    ----------
-    index : VectorStoreIndex
-        Загруженный индекс.
-    bm25 : BM25Retriever
-        Готовый BM25-ретривер (разделяется между всеми гибридными конфигурациями).
-    model_name : str
-        Название модели эмбеддингов.
-    embed_model : HuggingFaceEmbedding
-        Модель эмбеддингов для запросов.
-
-    Returns
-    -------
-    RetrieverConfig
-        Конфигурация компонента поиска.
-    """
-
     vec_retriever = VectorIndexRetriever(index=index, similarity_top_k=5)
 
     def _retrieve(query: str, top_k: int) -> list[NodeWithScore]:
@@ -247,30 +185,28 @@ def _make_hybrid(
     )
 
 
-def build_all_retrievers(
+def build_retrievers(
     indexes: dict[str, VectorStoreIndex],
     nodes: list[BaseNode],
     embedding_configs: dict[str, EmbeddingModelConfig],
 ) -> list[RetrieverConfig]:
     """
-    Создание всех компонент поиска для эксперимента.
+    Создание конфигураций ретриверов для эксперимента.
 
     Parameters
     ----------
     indexes : dict[str, VectorStoreIndex]
-        Индексы по имени модели: ``{"minilm": index, "e5": index, ...}``.
+        Индексы по имени модели эмбеддингов.
     nodes : list[BaseNode]
-        Список узлов (для sparse ретриверов).
+        Узлы корпуса (для sparse-ретриверов).
     embedding_configs : dict[str, EmbeddingModelConfig]
         Конфигурации моделей эмбеддингов.
 
     Returns
     -------
     list[RetrieverConfig]
-        Список конфигураций ретриверов, готовых к оценке.
+        Список конфигураций ретриверов.
     """
-
-    from llama_index.retrievers.bm25 import BM25Retriever
 
     bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)
 

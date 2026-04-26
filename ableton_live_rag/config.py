@@ -18,6 +18,7 @@ class LLMProvider(str, Enum):
     """
 
     ollama = "ollama"
+    openai = "openai"
     vllm = "vllm"
 
 
@@ -31,13 +32,17 @@ class Settings(BaseSettings):
     Attributes
     ----------
     llm_provider : LLMProvider
-        Провайдер LLM (``ollama`` или ``vllm``).
+        Провайдер LLM (``ollama``, ``openai`` или ``vllm``).
     ollama_base_url : str
         Базовый URL сервера Ollama.
     ollama_model : str
         Имя модели Ollama.
     ollama_request_timeout : int
         Таймаут запроса к Ollama в секундах.
+    openai_api_key : str
+        API-ключ OpenAI.
+    openai_model : str
+        Имя модели OpenAI.
     vllm_url_base : str
         Базовый URL vLLM-сервера (OpenAI-совместимый API).
     vllm_api_key : str
@@ -77,6 +82,9 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen3.5"
     ollama_request_timeout: int = 120
+
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
 
     vllm_url_base: str = "http://localhost:9999"
     vllm_api_key: str = "vllm-api-key"

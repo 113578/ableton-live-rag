@@ -1,7 +1,7 @@
 [project]
 name = "ableton-live-rag"
 version = "0.3.0"
-description = "RAG-система для документации Ableton Live 12"
+description = "RAG-система для корпуса документации Ableton: Live, Push, Music Strategies"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -10,6 +10,7 @@ dependencies = [
     "llama-index-vector-stores-qdrant>=0.2.0",
     "llama-index-embeddings-huggingface>=0.2.0",
     "llama-index-llms-ollama>=0.1.0",
+    "llama-index-llms-openai>=0.7.2",
     "llama-index-llms-openai-like>=0.7.1",
     "llama-index-retrievers-bm25>=0.2.0",
     "qdrant-client>=1.12",
@@ -24,6 +25,11 @@ dependencies = [
 
 [project.scripts]
 rag = "ableton_live_rag.cli:app"
+
+[project.optional-dependencies]
+evaluation = [
+    "deepeval>=3.9.7",
+]
 
 [build-system]
 requires = ["hatchling"]

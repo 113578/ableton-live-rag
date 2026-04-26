@@ -1,6 +1,6 @@
 # Ableton Live RAG
 
-RAG-система по документации Ableton Live 12.
+RAG-система по корпусу документации Ableton: Live, Push, Music Strategies.
 
 ## Установка
 
