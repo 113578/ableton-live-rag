@@ -30,6 +30,11 @@ rag = "ableton_live_rag.cli:app"
 evaluation = [
     "deepeval>=3.9.7",
 ]
+backend = [
+    "fastapi>=0.136.1",
+    "pydantic>=2.12.5",
+    "uvicorn>=0.46.0",
+]
 
 [build-system]
 requires = ["hatchling"]
