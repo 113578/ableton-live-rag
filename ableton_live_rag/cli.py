@@ -190,5 +190,31 @@ def stats() -> None:
     console.print(table)
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", "-H", help="Адрес для привязки"),
+    port: int = typer.Option(8000, "--port", "-p", help="Порт"),
+    reload: bool = typer.Option(
+        False, "--reload", help="Автоперезагрузка при изменениях"
+    ),
+) -> None:
+    """
+    Запустить FastAPI-сервер.
+
+    Parameters
+    ----------
+    host : str
+        Адрес для привязки сервера.
+    port : int
+        Порт.
+    reload : bool
+        Включить автоперезагрузку при изменениях в коде.
+    """
+
+    import uvicorn
+
+    uvicorn.run("ableton_live_rag.api:app", host=host, port=port, reload=reload)
+
+
 if __name__ == "__main__":
     app()
