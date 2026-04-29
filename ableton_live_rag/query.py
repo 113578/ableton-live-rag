@@ -19,7 +19,9 @@ from llama_index.core.response_synthesizers import (
     get_response_synthesizer,
 )
 from llama_index.core import Settings as LlamaIndexSettings
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.retrievers import QueryFusionRetriever, VectorIndexRetriever
+from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.retrievers.bm25 import BM25Retriever
 
@@ -135,7 +137,7 @@ def _build_hybrid_retriever(
         retrievers=[vector_retriever, bm25_retriever],
         similarity_top_k=similarity_top_k,
         num_queries=1,
-        mode="reciprocal_rerank",
+        mode=FUSION_MODES.RECIPROCAL_RANK,
         use_async=False,
         verbose=False,
     )
@@ -162,7 +164,7 @@ def _build_query_engine(
 
     index, nodes = _load_bge_index()
     retriever = _build_hybrid_retriever(index, nodes, similarity_top_k)
-    postprocessors = (
+    postprocessors: list[BaseNodePostprocessor] = (
         [SentenceTransformerRerank(model=_BGE_RERANKER_MODEL, top_n=similarity_top_k)]
         if rerank
         else []
