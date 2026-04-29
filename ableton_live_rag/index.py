@@ -2,9 +2,11 @@
 Управление векторным индексом: создание, загрузка, статистика.
 """
 
+import json
+
 from llama_index.core import Document, StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
-from llama_index.core.schema import BaseNode
+from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import QdrantClient
 
@@ -184,3 +186,46 @@ def get_stats(collection_name: str | None = None) -> dict:
             "points_count": 0,
             "status": "not_found (запустите 'rag ingest')",
         }
+
+
+def get_all_nodes(collection_name: str | None = None) -> list[BaseNode]:
+    """
+    Загрузка всех узлов из Qdrant (для BM25-индекса).
+
+    Parameters
+    ----------
+    collection_name : str or None, optional
+        Имя коллекции.
+
+    Returns
+    -------
+    list[BaseNode]
+        Все узлы коллекции.
+    """
+
+    name = collection_name or settings.collection_name
+    client = _get_qdrant_client()
+    nodes: list[BaseNode] = []
+    offset = None
+
+    while True:
+        results, next_offset = client.scroll(
+            collection_name=name,
+            with_payload=True,
+            with_vectors=False,
+            limit=1000,
+            offset=offset,
+        )
+
+        for point in results:
+            raw = point.payload.get("_node_content") if point.payload else None
+
+            if raw:
+                nodes.append(TextNode.model_validate(json.loads(raw)))
+
+        if next_offset is None:
+            break
+
+        offset = next_offset
+
+    return nodes
