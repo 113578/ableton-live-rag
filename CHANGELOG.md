@@ -2,6 +2,31 @@
 
 <!-- version list -->
 
+## v0.5.0 (2026-04-29)
+
+### Build System
+
+- Add backend optional dependencies ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+- Add Dockerfile ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+### Features
+
+- Add backend ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+- Add hybrid search ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+- Add ollama to experiments ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+- Add serve command ([#22](https://github.com/113578/ableton-live-rag/pull/22),
+  [`f89a009`](https://github.com/113578/ableton-live-rag/commit/f89a009be24264c962f6fbb399dfb80cdde1c0e0))
+
+
 ## v0.4.0 (2026-04-26)
 
 ### Bug Fixes
