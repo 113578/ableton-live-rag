@@ -16,9 +16,7 @@ _OPENAI_LIKE_PREFIXES: list[tuple[str, str]] = [
     ("GLM", "glm-4.7"),
     ("GEMMA", "gemma-4"),
 ]
-_OLLAMA_PREFIXES: list[tuple[str, str]] = [
-    ("OLLAMA", "qwen3.5")
-]
+_OLLAMA_PREFIXES: list[tuple[str, str]] = [("OLLAMA", "qwen3.5")]
 
 _PROMPT = RichPromptTemplate(
     """\
@@ -148,7 +146,7 @@ def _load_generator_specs() -> list[GeneratorSpec]:
                     api_key=os.environ.get(f"{prefix}_API_KEY", ""),
                 )
             )
- 
+
     for prefix, name in _OLLAMA_PREFIXES:
         base_url = os.environ.get(f"{prefix}_BASE_URL")
 
