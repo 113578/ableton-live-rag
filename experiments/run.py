@@ -8,7 +8,6 @@
 Примеры:
     uv run experiments/run.py retriever --top-k 5
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
-    uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
     uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
 """
