@@ -33,12 +33,14 @@ class Settings(BaseSettings):
     ----------
     llm_provider : LLMProvider
         Провайдер LLM (``ollama``, ``openai`` или ``vllm``).
+    request_timeout : int
+        Таймаут запроса к Ollama в секундах.
+    temperature : float
+        Температура генерации.
     ollama_base_url : str
         Базовый URL сервера Ollama.
     ollama_model : str
         Имя модели Ollama.
-    ollama_request_timeout : int
-        Таймаут запроса к Ollama в секундах.
     openai_api_key : str
         API-ключ OpenAI.
     openai_model : str
@@ -56,7 +58,8 @@ class Settings(BaseSettings):
     corpus_path : Path
         Путь к директории с PDF-файлами корпуса.
     qdrant_path : Path
-        Путь к директории с хранилищем Qdrant.
+        Путь к директории с хранилищем Qdrant (используется только
+        при пустом ``qdrant_url``).
     collection_name : str
         Базовое имя коллекции Qdrant.
     chunk_size : int
@@ -69,6 +72,8 @@ class Settings(BaseSettings):
         Максимальное число токенов в ответе LLM.
     similarity_top_k : int
         Количество фрагментов, возвращаемых компонентом поиска по умолчанию.
+    telegram_bot_token : str
+        Токен Telegram-бота (от @BotFather).
     """
 
     model_config = SettingsConfigDict(
@@ -77,34 +82,38 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    llm_provider: LLMProvider = LLMProvider.ollama
+    llm_provider: LLMProvider = LLMProvider.vllm
+
+    context_window: int = 32768
+    num_output: int = 4096
+    request_timeout: int = 120
+    temperature: float = 0.7
 
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen3.5"
-    ollama_request_timeout: int = 120
-
-    openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
 
     vllm_url_base: str = "http://localhost:9999"
     vllm_api_key: str = "vllm-api-key"
-    vllm_model: str = "gpt-oss"
+    vllm_model: str = "gemma-4"
 
-    embedding_model: str = "all-MiniLM-L6-v2"
-    embedding_dim: int = 384
+    openai_api_key: str = "openai-api-key"
+    openai_model: str = "gpt-5.4"
+
+    embedding_model: str = "BAAI/bge-base-en-v1.5"
+    embedding_dim: int = 768
 
     corpus_path: Path = PROJECT_ROOT / "corpus"
-    qdrant_path: Path = PROJECT_ROOT / "data" / "qdrant"
+    qdrant_path: Path = PROJECT_ROOT / "qdrant_data"
 
-    collection_name: str = "ableton_live_docs"
+    active_embedding_model: str = "bge"
+    collection_name: str = "ableton_live"
 
     chunk_size: int = 512
     chunk_overlap: int = 64
 
-    context_window: int = 32768
-    num_output: int = 4096
-
     similarity_top_k: int = 5
+
+    telegram_bot_token: str = ""
 
 
 settings = Settings()
