@@ -51,7 +51,11 @@ async def stats() -> dict:
         Словарь с параметрами и значениями коллекции.
     """
 
-    return get_stats(collection_name=EMBEDDING_MODELS["bge"].collection_name)
+    return get_stats(
+        collection_name=EMBEDDING_MODELS[
+            settings.active_embedding_model
+        ].collection_name
+    )
 
 
 @app.post("/search", response_model=list[SearchResultOut])
