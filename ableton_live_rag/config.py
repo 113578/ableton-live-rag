@@ -93,10 +93,10 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3.5"
 
     vllm_url_base: str = "http://localhost:9999"
-    vllm_api_key: str = "vllm-api-key"
+    vllm_api_key: str = ""
     vllm_model: str = "gemma-4"
 
-    openai_api_key: str = "openai-api-key"
+    openai_api_key: str = ""
     openai_model: str = "gpt-5.4"
 
     embedding_model: str = "BAAI/bge-base-en-v1.5"
