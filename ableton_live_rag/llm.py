@@ -38,7 +38,9 @@ def _setup_ollama() -> None:
     LlamaIndexSettings.llm = Ollama(
         model=settings.ollama_model,
         base_url=settings.ollama_base_url,
-        request_timeout=settings.ollama_request_timeout,
+        temperature=settings.temperature,
+        context_window=settings.context_window,
+        request_timeout=settings.request_timeout,
     )
 
 
@@ -49,8 +51,10 @@ def _setup_openai() -> None:
 
     LlamaIndexSettings.llm = OpenAI(
         model=settings.openai_model,
-        api_key=settings.openai_api_key or None,
+        temperature=settings.temperature,
+        api_key=settings.openai_api_key,
         max_tokens=settings.num_output,
+        timeout=settings.request_timeout,
     )
 
 
@@ -61,9 +65,11 @@ def _setup_vllm() -> None:
 
     LlamaIndexSettings.llm = OpenAILike(
         model=settings.vllm_model,
+        temperature=settings.temperature,
         api_key=settings.vllm_api_key,
         api_base=settings.vllm_url_base,
         context_window=settings.context_window,
         max_tokens=settings.num_output,
         is_chat_model=True,
+        timeout=settings.request_timeout,
     )
