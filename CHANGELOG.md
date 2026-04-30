@@ -2,6 +2,48 @@
 
 <!-- version list -->
 
+## v0.6.0 (2026-04-30)
+
+### Bug Fixes
+
+- Add missing arguments ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Fix prompt and config ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Remove keys ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+### Build System
+
+- Add docker compose ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add requirements ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add telegram bot dependencies ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+### Features
+
+- Add async qdrant client ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add bot cli ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add custom retriever ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add frontend ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+- Add telegram bot ([#23](https://github.com/113578/ableton-live-rag/pull/23),
+  [`47fffd4`](https://github.com/113578/ableton-live-rag/commit/47fffd4bfe12406f70858b610b0bfd77295b8a02))
+
+
 ## v0.5.0 (2026-04-29)
 
 ### Build System
