@@ -1,5 +1,5 @@
 """
-FastAPI-приложение RAG-системы.
+FastAPI-приложение.
 """
 
 import json
@@ -35,8 +35,6 @@ app = FastAPI(title="Ableton Live RAG", lifespan=_lifespan)
 
 
 def _sse(event: dict) -> str:
-    """Форматирование словаря в строку Server-Sent Event."""
-
     return f"data: {json.dumps(event)}\n\n"
 
 
@@ -51,7 +49,11 @@ async def stats() -> dict:
         Словарь с параметрами и значениями коллекции.
     """
 
-    return get_stats(collection_name=EMBEDDING_MODELS["bge"].collection_name)
+    return get_stats(
+        collection_name=EMBEDDING_MODELS[
+            settings.active_embedding_model
+        ].collection_name
+    )
 
 
 @app.post("/search", response_model=list[SearchResultOut])
@@ -89,9 +91,7 @@ async def ask(req: AskRequest) -> StreamingResponse:
     Returns
     -------
     StreamingResponse
-        Поток Server-Sent Events (``text/event-stream``).
-        События: ``{"type": "token", "content": "..."}``
-        и ``{"type": "sources", "content": [...]}``.
+        Поток Server-Sent Events.
     """
 
     k = req.top_k or settings.similarity_top_k
@@ -124,9 +124,7 @@ async def chat(req: ChatRequest) -> StreamingResponse:
     Returns
     -------
     StreamingResponse
-        Поток Server-Sent Events (``text/event-stream``).
-        Первое событие — ``{"type": "session_id", "content": "..."}``,
-        затем токены и источники как в ``/ask``.
+        Поток Server-Sent Events.
     """
 
     session_id = req.session_id or str(uuid.uuid4())
@@ -162,7 +160,7 @@ async def chat(req: ChatRequest) -> StreamingResponse:
 @app.delete("/chat/{session_id}", status_code=204)
 async def delete_session(session_id: str) -> None:
     """
-    Удалить сессию и очистить историю диалога.
+    Удаление сессии и очистка истории диалога.
 
     Parameters
     ----------

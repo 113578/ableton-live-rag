@@ -50,8 +50,12 @@ def ingest(
 
     console.print(f"[green]Извлечено {len(documents)} разделов из TOC[/green]")
 
-    console.print("[dim]Индексирование (чанкинг + эмбеддинги + Qdrant)...[/dim]")
-    build_index(documents)
+    from ableton_live_rag.config import EMBEDDING_MODELS, settings as cfg
+
+    collection = EMBEDDING_MODELS[cfg.active_embedding_model].collection_name
+    console.print(f"[dim]Индексирование → {collection}...[/dim]")
+
+    build_index(documents, collection_name=collection)
 
     console.print("[bold green]✓ Индексирование завершено![/bold green]")
 
@@ -191,29 +195,45 @@ def stats() -> None:
 
 
 @app.command()
+def bot() -> None:
+    """
+    Запуск Telegram-бота.
+
+    Бот подключается к запущенному FastAPI-серверу (``rag serve``)
+    и отвечает на вопросы пользователей из Telegram.
+    """
+
+    from ableton_live_rag.bot.bot import run
+    from ableton_live_rag.config import settings
+
+    if not settings.telegram_bot_token:
+        console.print("[red]Токен бота не задан.[/red]")
+        raise typer.Exit(1)
+
+    console.print("[bold green]Запуск Telegram-бота...[/bold green]")
+
+    run(token=settings.telegram_bot_token, api_base_url=settings.api_base_url)
+
+
+@app.command()
 def serve(
     host: str = typer.Option("0.0.0.0", "--host", "-H", help="Адрес для привязки"),
     port: int = typer.Option(8000, "--port", "-p", help="Порт"),
-    reload: bool = typer.Option(
-        False, "--reload", help="Автоперезагрузка при изменениях"
-    ),
 ) -> None:
     """
-    Запустить FastAPI-сервер.
+    Запуск FastAPI приложения.
 
     Parameters
     ----------
     host : str
-        Адрес для привязки сервера.
+        Адрес сервера.
     port : int
         Порт.
-    reload : bool
-        Включить автоперезагрузку при изменениях в коде.
     """
 
     import uvicorn
 
-    uvicorn.run("ableton_live_rag.api:app", host=host, port=port, reload=reload)
+    uvicorn.run("ableton_live_rag.api:app", host=host, port=port, reload=True)
 
 
 if __name__ == "__main__":

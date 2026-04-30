@@ -29,7 +29,7 @@ from ableton_live_rag import index as idx
 from ableton_live_rag.config import EMBEDDING_MODELS, settings
 
 _BGE_RERANKER_MODEL = "BAAI/bge-reranker-base"
-_BGE_CONFIG = EMBEDDING_MODELS["bge"]
+_EMBEDDING_CONFIG = EMBEDDING_MODELS[settings.active_embedding_model]
 
 
 _CHAT_SYSTEM_PROMPT = """\
@@ -38,7 +38,9 @@ exclusively on the provided documentation excerpts.
 
 Rules:
 - Answer only from the context. If it lacks enough information, say so.
-- Cite sources as [Source 1], [Source 2], etc.
+- Be concise: 3–6 sentences max unless a step-by-step list is essential.
+- Never use tables. Use short bullet lists only when steps must be ordered.
+- Bold key terms with *asterisks*. No headings, no horizontal rules.
 - Be precise and practical — users are musicians and producers.
 - When describing UI actions, mention exact menu paths and keyboard shortcuts.\
 """
@@ -50,7 +52,9 @@ _TEXT_QA_TEMPLATE = RichPromptTemplate(
 
     Rules:
     - Answer only from the context below. If it lacks enough information, say so.
-    - Cite sources as [Source 1], [Source 2], etc.
+    - Be concise: 3–6 sentences max unless a step-by-step list is essential.
+    - Never use tables. Use short bullet lists only when steps must be ordered.
+    - Bold key terms with *asterisks*. No headings, no horizontal rules.
     - Be precise and practical — users are musicians and producers.
     - When describing UI actions, mention exact menu paths and keyboard shortcuts.
 
@@ -116,11 +120,11 @@ class StreamingAnswer:
 
 def _load_bge_index() -> tuple[VectorStoreIndex, list]:
     LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
-        model_name=_BGE_CONFIG.model_id,
-        query_instruction=_BGE_CONFIG.query_instruction,
-        text_instruction=_BGE_CONFIG.text_instruction,
+        model_name=_EMBEDDING_CONFIG.model_id,
+        query_instruction=_EMBEDDING_CONFIG.query_instruction,
+        text_instruction=_EMBEDDING_CONFIG.text_instruction,
     )
-    collection = _BGE_CONFIG.collection_name
+    collection = _EMBEDDING_CONFIG.collection_name
     index = idx.load_index(collection_name=collection)
     nodes = idx.get_all_nodes(collection_name=collection)
     return index, nodes

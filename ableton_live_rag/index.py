@@ -8,11 +8,12 @@ from llama_index.core import Document, StorageContext, VectorStoreIndex
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from qdrant_client import QdrantClient
+from qdrant_client import AsyncQdrantClient, QdrantClient
 
 from ableton_live_rag.config import settings
 
 _qdrant_client: QdrantClient | None = None
+_async_qdrant_client: AsyncQdrantClient | None = None
 
 
 def _get_qdrant_client() -> QdrantClient:
@@ -24,13 +25,39 @@ def _get_qdrant_client() -> QdrantClient:
     QdrantClient
         Клиент Qdrant.
     """
+
     global _qdrant_client
 
     if _qdrant_client is None:
-        settings.qdrant_path.mkdir(parents=True, exist_ok=True)
-        _qdrant_client = QdrantClient(path=str(settings.qdrant_path))
+        if settings.qdrant_url:
+            _qdrant_client = QdrantClient(url=settings.qdrant_url)
+        else:
+            settings.qdrant_path.mkdir(parents=True, exist_ok=True)
+            _qdrant_client = QdrantClient(path=str(settings.qdrant_path))
 
     return _qdrant_client
+
+
+def _get_async_qdrant_client() -> AsyncQdrantClient:
+    """
+    Получение экземпляра AsyncQdrantClient (синглтон).
+
+    Returns
+    -------
+    AsyncQdrantClient
+        Асинхронный клиент Qdrant.
+    """
+
+    global _async_qdrant_client
+
+    if _async_qdrant_client is None:
+        if settings.qdrant_url:
+            _async_qdrant_client = AsyncQdrantClient(url=settings.qdrant_url)
+        else:
+            settings.qdrant_path.mkdir(parents=True, exist_ok=True)
+            _async_qdrant_client = AsyncQdrantClient(path=str(settings.qdrant_path))
+
+    return _async_qdrant_client
 
 
 def _get_vector_store(
@@ -42,8 +69,6 @@ def _get_vector_store(
 
     Parameters
     ----------
-    client : QdrantClient
-        Клиент Qdrant.
     collection_name : str or None, optional
         Имя коллекции.
 
@@ -54,7 +79,8 @@ def _get_vector_store(
     """
 
     return QdrantVectorStore(
-        client=client,
+        client=_get_qdrant_client(),
+        aclient=_get_async_qdrant_client(),
         collection_name=collection_name or settings.collection_name,
     )
 
