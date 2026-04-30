@@ -207,9 +207,7 @@ def bot() -> None:
     from ableton_live_rag.config import settings
 
     if not settings.telegram_bot_token:
-        console.print(
-            "[red]Токен бота не задан.[/red]"
-        )
+        console.print("[red]Токен бота не задан.[/red]")
         raise typer.Exit(1)
 
     console.print("[bold green]Запуск Telegram-бота...[/bold green]")
