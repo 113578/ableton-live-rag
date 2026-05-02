@@ -200,10 +200,16 @@ async def chat(req: ChatRequest) -> StreamingResponse:
             sources_json = json.dumps(sources)
 
             await asyncio.to_thread(
-                rag_query._llmcache.store, req.message, full_text, None, {"sources": sources_json}
+                rag_query._llmcache.store,
+                req.message,
+                full_text,
+                None,
+                {"sources": sources_json},
             )
 
-            logger.info("Cache stored response for session %s: %r", session_id, req.message)
+            logger.info(
+                "Cache stored response for session %s: %r", session_id, req.message
+            )
 
         yield _sse({"type": "sources", "content": sources})
         yield "data: [DONE]\n\n"

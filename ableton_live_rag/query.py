@@ -240,9 +240,7 @@ async def ask(question: str, top_k: int = settings.similarity_top_k) -> Streamin
         async def _cached_gen() -> AsyncGenerator[str, None]:
             yield response_text
 
-        return StreamingAnswer(
-            source_nodes=source_nodes, response_gen=_cached_gen()
-        )
+        return StreamingAnswer(source_nodes=source_nodes, response_gen=_cached_gen())
 
     logger.info("Cache MISS for: %r", question)
     engine = _build_query_engine(similarity_top_k=top_k)
