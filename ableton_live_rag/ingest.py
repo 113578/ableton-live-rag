@@ -13,7 +13,9 @@ from pathlib import Path
 import fitz
 from llama_index.core import Document
 
-from ableton_live_rag.config import settings
+from ableton_live_rag.config import get_logger, settings
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -220,17 +222,25 @@ def load_documents(pdf_path: str | None = None) -> list[Document]:
     root = Path(pdf_path) if pdf_path else settings.corpus_path
     pdf_files = sorted(root.glob("*.pdf")) if root.is_dir() else [root]
 
+    logger.info("Loading documents from %s (%d PDF files)...", root, len(pdf_files))
+
     documents: list[Document] = []
 
     for pdf_file in pdf_files:
         doc = fitz.open(str(pdf_file))
         source = pdf_file.stem
+        before = len(documents)
 
         for section in extract_toc(doc):
             llama_doc = section_to_document(doc, section, source=source)
+
             if llama_doc is not None:
                 documents.append(llama_doc)
 
         doc.close()
+
+        logger.info("  %s → %d sections", pdf_file.name, len(documents) - before)
+
+    logger.info("Total documents extracted: %d", len(documents))
 
     return documents
