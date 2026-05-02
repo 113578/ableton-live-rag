@@ -1,7 +1,8 @@
 """
-Конфигурации проекта.
+Конфигурация проекта.
 """
 
+import logging
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -10,6 +11,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
+def get_logger(name: str) -> logging.Logger:
+    return logging.getLogger(name)
 
 
 class LLMProvider(str, Enum):
@@ -60,6 +72,10 @@ class Settings(BaseSettings):
     qdrant_path : Path
         Путь к директории с хранилищем Qdrant (используется только
         при пустом ``qdrant_url``).
+    qdrant_url : str
+        URL для клиента Qdrant.
+    redis_url : str
+        URL для клиента Redis.
     collection_name : str
         Базовое имя коллекции Qdrant.
     chunk_size : int
@@ -73,7 +89,9 @@ class Settings(BaseSettings):
     similarity_top_k : int
         Количество фрагментов, возвращаемых компонентом поиска по умолчанию.
     telegram_bot_token : str
-        Токен Telegram-бота (от @BotFather).
+        Токен Telegram-бота.
+    api_base_url : str
+        URL FastAPI-приложения.
     """
 
     model_config = SettingsConfigDict(
@@ -103,7 +121,11 @@ class Settings(BaseSettings):
     embedding_dim: int = 768
 
     corpus_path: Path = PROJECT_ROOT / "corpus"
+
     qdrant_path: Path = PROJECT_ROOT / "qdrant_data"
+    qdrant_url: str = "http://localhost:6333"
+
+    redis_url: str = "redis://localhost:6379"
 
     active_embedding_model: str = "bge"
     collection_name: str = "ableton_live"
@@ -114,6 +136,7 @@ class Settings(BaseSettings):
     similarity_top_k: int = 5
 
     telegram_bot_token: str = ""
+    api_base_url: str = "http://localhost:8000"
 
 
 settings = Settings()
