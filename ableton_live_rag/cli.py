@@ -10,27 +10,20 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+from ableton_live_rag.config import settings
+
 app = typer.Typer(
     name="rag",
-    help="RAG-система для документации Ableton Live 12",
+    help="RAG-система для документации экосистемы Ableton",
     no_args_is_help=True,
 )
 console = Console()
 
 
 @app.command()
-def ingest(
-    pdf_path: str | None = typer.Option(
-        None, "--pdf", "-p", help="Путь к корпусу документов"
-    ),
-) -> None:
+def ingest() -> None:
     """
     Загрузка PDF, разбитие на чанки, векторизация и сохранение в Qdrant.
-
-    Parameters
-    ----------
-    pdf_path : str or None, optional
-        Путь к PDF-файлу. Если не указан, используется ``settings.corpus_path``.
     """
 
     from ableton_live_rag import llm
@@ -46,7 +39,7 @@ def ingest(
         console=console,
     ) as progress:
         progress.add_task("Извлечение документов из PDF...", total=None)
-        documents = load_documents(pdf_path=pdf_path)
+        documents = load_documents(pdf_path=settings.corpus_path)
 
     console.print(f"[green]Извлечено {len(documents)} разделов из TOC[/green]")
 
@@ -62,7 +55,7 @@ def ingest(
 
 @app.command()
 def ask(
-    question: str = typer.Argument(..., help="Вопрос об Ableton Live"),
+    question: str = typer.Argument(..., help="Запрос пользователя"),
     top_k: int | None = typer.Option(
         None, "--top-k", "-k", help="Количество фрагментов для контекста"
     ),
