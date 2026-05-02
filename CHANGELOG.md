@@ -2,6 +2,46 @@
 
 <!-- version list -->
 
+## v0.7.0 (2026-05-02)
+
+### Build System
+
+- Add corpus volume ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add Redis ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Fix qdrant healthcheck ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Remove fakeredis ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Update service urls ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+### Features
+
+- Add logger ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add logger and urls ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add logger: ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add Redis cache and logger ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add Redis cache and memory ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+- Add Redis memory ([#25](https://github.com/113578/ableton-live-rag/pull/25),
+  [`eef83b5`](https://github.com/113578/ableton-live-rag/commit/eef83b552852f079823c7d1867d3d5895fae4775))
+
+
 ## v0.6.0 (2026-04-30)
 
 ### Bug Fixes
