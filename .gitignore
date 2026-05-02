@@ -11,10 +11,16 @@ wheels/
 
 # Project data
 .env
-data/
+qdrant_data/
+redis_data/
 eval_results/
 corpus/
 .deepeval/
+
+# Logs and test coverage
+*.log
+.coverage
+htmlcov/
 
 # macOS
 .DS_Store

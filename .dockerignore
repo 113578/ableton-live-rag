@@ -4,8 +4,13 @@
 __pycache__/
 *.pyc
 *.pyo
-corpus/
-data/
+qdrant_data/
+redis_data/
+eval_results/
+.deepeval/
 experiments/
 tests/
 scripts/
+docker-compose.yml
+*.md
+.gitignore
