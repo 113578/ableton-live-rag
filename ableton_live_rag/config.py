@@ -63,6 +63,8 @@ class Settings(BaseSettings):
         API-ключ для vLLM.
     vllm_model : str
         Имя модели vLLM.
+    guard_model : str
+        Имя модели для guardrails. Если пустое, используется основная LLM.
     embedding_model : str
         Идентификатор модели эмбеддингов (для основного пайплайна).
     embedding_dim : int
@@ -116,6 +118,8 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""
     openai_model: str = "gpt-5.4"
+
+    guard_model: str = ""
 
     embedding_model: str = "BAAI/bge-base-en-v1.5"
     embedding_dim: int = 768

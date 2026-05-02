@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from llama_index.core.llms import ChatMessage
 
-from ableton_live_rag import llm
+from ableton_live_rag import guardrails, llm
 from ableton_live_rag import query as rag_query
 from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
 from ableton_live_rag.index import get_stats
@@ -164,28 +164,41 @@ async def chat(req: ChatRequest) -> StreamingResponse:
 
     session_id = req.session_id or str(uuid.uuid4())
     k = req.top_k or settings.similarity_top_k
-    engine = rag_query.create_chat_engine(session_id=session_id, top_k=k)
 
     async def _generate():
         yield _sse({"type": "session_id", "content": session_id})
 
-        cached = await asyncio.to_thread(rag_query._llmcache.check, req.message)
+        guard_result = await guardrails.guard(req.message)
+
+        if not guard_result.safe:
+            yield _sse(
+                {
+                    "type": "token",
+                    "content": guardrails.rejection_message(guard_result.category),
+                }
+            )
+            yield "data: [DONE]\n\n"
+            return
+
+        query = await guardrails.rewrite(req.message)
+        engine = rag_query.create_chat_engine(session_id=session_id, top_k=k)
+        cached = await asyncio.to_thread(rag_query._llmcache.check, query)
 
         if cached:
-            logger.info("Cache HIT for session %s: %r", session_id, req.message)
+            logger.info("Cache HIT for session %s: %r", session_id, query)
 
             full_text: str = cached[0]["response"]
             sources: list[dict] = json.loads(
                 cached[0].get("metadata", {}).get("sources", "[]")
             )
-            engine.memory.put(ChatMessage(role="user", content=req.message))
+            engine.memory.put(ChatMessage(role="user", content=query))
             engine.memory.put(ChatMessage(role="assistant", content=full_text))
 
             yield _sse({"type": "token", "content": full_text})
         else:
-            logger.info("Cache MISS for session %s: %r", session_id, req.message)
+            logger.info("Cache MISS for session %s: %r", session_id, query)
 
-            response = await engine.astream_chat(req.message)
+            response = await engine.astream_chat(query)
 
             tokens: list[str] = []
             async for token in response.async_response_gen():
@@ -201,15 +214,13 @@ async def chat(req: ChatRequest) -> StreamingResponse:
 
             await asyncio.to_thread(
                 rag_query._llmcache.store,
-                req.message,
+                query,
                 full_text,
                 None,
                 {"sources": sources_json},
             )
 
-            logger.info(
-                "Cache stored response for session %s: %r", session_id, req.message
-            )
+            logger.info("Cache stored response for session %s: %r", session_id, query)
 
         yield _sse({"type": "sources", "content": sources})
         yield "data: [DONE]\n\n"
