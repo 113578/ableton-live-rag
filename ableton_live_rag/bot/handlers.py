@@ -2,7 +2,6 @@
 Обработчики команд и сообщений Telegram-бота.
 """
 
-import logging
 import time
 
 from telegram import Update
@@ -11,23 +10,24 @@ from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from ableton_live_rag.bot.client import RAGClient
+from ableton_live_rag.config import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 _WELCOME = (
-    "Привет! Я помогу разобраться с документацией экосистемы Ableton.\n\n"
-    "Просто задай вопрос — и я найду ответ в руководствах к Live 12, Push 3 "
-    "и книге «Making Music».\n\n"
-    "Команды:\n"
-    "/new — начать новый диалог (сбросить историю)\n"
-    "/help — показать эту справку"
+    "Hi! I can help you navigate the Ableton ecosystem documentation.\n\n"
+    "Just ask a question — I'll find the answer in the Live 12, Push 3, "
+    "and Making Music guides.\n\n"
+    "Commands:\n"
+    "/new — start a new conversation (clear history)\n"
+    "/help — show this message"
 )
 
 _HELP = (
-    "Задавай вопросы об экосистеме Ableton на русском или английском языке.\n\n"
-    "Я веду контекст беседы: можешь уточнять и переспрашивать.\n\n"
-    "/new — очистить историю и начать заново\n"
-    "/help — эта справка"
+    "Ask anything about the Ableton ecosystem.\n\n"
+    "I keep track of the conversation context, so you can follow up and ask for clarifications.\n\n"
+    "/new — clear history and start over\n"
+    "/help — this message"
 )
 
 _MIN_EDIT_INTERVAL = 1.2
@@ -44,7 +44,7 @@ def _format_sources(sources: list[dict]) -> str:
     if not sources:
         return ""
 
-    lines = ["📚 Источники:"]
+    lines = ["📚 Sources:"]
     seen: set[str] = set()
 
     for s in sources:
@@ -62,7 +62,7 @@ def _format_sources(sources: list[dict]) -> str:
         line = f"• {label}"
 
         if page:
-            line += f" (стр. {page})"
+            line += f" (p. {page})"
 
         lines.append(line)
 
@@ -109,6 +109,8 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     session_id: str | None = context.user_data.get("session_id")
 
     if session_id:
+        logger.info("User %s reset session %s", update.effective_user.id, session_id)
+
         try:
             await client.delete_session(session_id)
         except Exception:
@@ -116,7 +118,7 @@ async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         context.user_data["session_id"] = None
 
-    await update.message.reply_text("Начинаем новый диалог. Задавай вопрос!")
+    await update.message.reply_text("Starting a new conversation. Go ahead and ask!")
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -127,7 +129,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not user_text.strip():
         return
 
+    logger.info(
+        "User %s [session=%s]: %r", update.effective_user.id, session_id, user_text[:80]
+    )
+
     await update.message.chat.send_action(ChatAction.TYPING)
+
     msg = await update.message.reply_text("⏳")
 
     text = ""
@@ -175,4 +182,4 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             "Error handling message from user %s", update.effective_user.id
         )
 
-        await _safe_edit(msg, "Не удалось получить ответ. Попробуй ещё раз.")
+        await _safe_edit(msg, "Failed to get a response. Please try again.")

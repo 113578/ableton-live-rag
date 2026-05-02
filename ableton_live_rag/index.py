@@ -10,7 +10,9 @@ from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import AsyncQdrantClient, QdrantClient
 
-from ableton_live_rag.config import settings
+from ableton_live_rag.config import get_logger, settings
+
+logger = get_logger(__name__)
 
 _qdrant_client: QdrantClient | None = None
 _async_qdrant_client: AsyncQdrantClient | None = None
@@ -30,8 +32,10 @@ def _get_qdrant_client() -> QdrantClient:
 
     if _qdrant_client is None:
         if settings.qdrant_url:
+            logger.info("Connecting to Qdrant at %s", settings.qdrant_url)
             _qdrant_client = QdrantClient(url=settings.qdrant_url)
         else:
+            logger.info("Using local Qdrant at %s", settings.qdrant_path)
             settings.qdrant_path.mkdir(parents=True, exist_ok=True)
             _qdrant_client = QdrantClient(path=str(settings.qdrant_path))
 
@@ -108,6 +112,8 @@ def build_index(
     name = collection_name or settings.collection_name
     client = _get_qdrant_client()
 
+    logger.info("Building index '%s' from %d documents...", name, len(documents))
+
     try:
         client.delete_collection(collection_name=name)
     except Exception:
@@ -115,12 +121,15 @@ def build_index(
 
     vector_store = _get_vector_store(client=client, collection_name=name)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
-
-    return VectorStoreIndex.from_documents(
+    index = VectorStoreIndex.from_documents(
         documents=documents,
         storage_context=storage_context,
         show_progress=True,
     )
+
+    logger.info("Index '%s' built successfully.", name)
+
+    return index
 
 
 def load_index(collection_name: str | None = None) -> VectorStoreIndex:
@@ -148,8 +157,10 @@ def load_index(collection_name: str | None = None) -> VectorStoreIndex:
 
     if not client.collection_exists(collection_name=name):
         raise RuntimeError(
-            f"Индекс '{name}' не найден в Qdrant. Сначала выполните 'rag ingest'."
+            f"Index '{name}' not found in Qdrant. Run 'rag ingest' first."
         )
+
+    logger.info("Loading index from collection '%s'.", name)
 
     vector_store = _get_vector_store(client=client, collection_name=name)
 
@@ -253,5 +264,7 @@ def get_all_nodes(collection_name: str | None = None) -> list[BaseNode]:
             break
 
         offset = next_offset
+
+    logger.info("Loaded %d nodes from collection '%s'.", len(nodes), name)
 
     return nodes

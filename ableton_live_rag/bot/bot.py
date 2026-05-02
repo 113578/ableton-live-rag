@@ -2,8 +2,6 @@
 Точка входа Telegram-бота.
 """
 
-import logging
-
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 from ableton_live_rag.bot.client import RAGClient
@@ -13,6 +11,9 @@ from ableton_live_rag.bot.handlers import (
     new_command,
     start_command,
 )
+from ableton_live_rag.config import get_logger
+
+logger = get_logger(__name__)
 
 
 def build_app(token: str, api_base_url: str) -> Application:
@@ -55,10 +56,7 @@ def run(token: str, api_base_url: str) -> None:
         Базовый URL FastAPI-приложения.
     """
 
-    logging.basicConfig(
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        level=logging.INFO,
-    )
+    logger.info("Starting Telegram bot (API: %s)...", api_base_url)
 
     app = build_app(token, api_base_url)
     app.run_polling(drop_pending_updates=True)
