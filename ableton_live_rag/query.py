@@ -29,7 +29,7 @@ from llama_index.storage.chat_store.redis import RedisChatStore
 from redisvl.extensions.cache.llm import SemanticCache
 from redisvl.utils.vectorize import HFTextVectorizer
 
-from ableton_live_rag import index as idx
+from ableton_live_rag import guardrails, index as idx
 from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
 
 logger = get_logger(__name__)
@@ -226,7 +226,19 @@ async def ask(question: str, top_k: int = settings.similarity_top_k) -> Streamin
         Объект с ``source_nodes`` и асинхронным ``response_gen``.
     """
 
-    cached = await asyncio.to_thread(_llmcache.check, question)
+    guard_result = await guardrails.guard(question)
+
+    if not guard_result.safe:
+        msg = guardrails.rejection_message(guard_result.category)
+
+        async def _rejected_gen() -> AsyncGenerator[str, None]:
+            yield msg
+
+        return StreamingAnswer(source_nodes=[], response_gen=_rejected_gen())
+
+    query = await guardrails.rewrite(question)
+
+    cached = await asyncio.to_thread(_llmcache.check, query)
 
     if cached:
         logger.info("Cache HIT for: %r", question)
@@ -242,11 +254,12 @@ async def ask(question: str, top_k: int = settings.similarity_top_k) -> Streamin
 
         return StreamingAnswer(source_nodes=source_nodes, response_gen=_cached_gen())
 
-    logger.info("Cache MISS for: %r", question)
+    logger.info("Cache MISS for: %r", query)
+
     engine = _build_query_engine(similarity_top_k=top_k)
     response = cast(
         StreamingResponse,
-        await asyncio.to_thread(engine.query, question),
+        await asyncio.to_thread(engine.query, query),
     )
     source_nodes = [_to_search_result(node) for node in response.source_nodes]
 
@@ -259,10 +272,12 @@ async def ask(question: str, top_k: int = settings.similarity_top_k) -> Streamin
 
         full_text = "".join(tokens)
         sources_json = json.dumps([asdict(n) for n in source_nodes])
+
         await asyncio.to_thread(
-            _llmcache.store, question, full_text, None, {"sources": sources_json}
+            _llmcache.store, query, full_text, None, {"sources": sources_json}
         )
-        logger.info("Cache stored response for: %r", question)
+
+        logger.info("Cache stored response for: %r", query)
 
     return StreamingAnswer(source_nodes=source_nodes, response_gen=_streaming_gen())
 
@@ -286,9 +301,16 @@ async def retrieve(
         Список результатов, отсортированный по убыванию релевантности.
     """
 
+    guard_result = await guardrails.guard(query)
+
+    if not guard_result.safe:
+        return []
+
+    rewritten = await guardrails.rewrite(query)
+
     index, corpus_nodes = _load_bge_index()
     retriever = _build_hybrid_retriever(index, corpus_nodes, similarity_top_k)
-    nodes = await asyncio.to_thread(retriever.retrieve, query)
+    nodes = await asyncio.to_thread(retriever.retrieve, rewritten)
 
     return [_to_search_result(node) for node in nodes]
 
