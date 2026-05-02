@@ -5,13 +5,17 @@
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from ableton_live_rag.config import LLMProvider, settings
+from ableton_live_rag.config import LLMProvider, get_logger, settings
+
+logger = get_logger(__name__)
 
 
 def setup() -> None:
     """
     Настройка параметров LlamaIndex.
     """
+
+    logger.info("Setting up LLM provider: %s", settings.llm_provider.value)
 
     LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
         model_name=settings.embedding_model,
@@ -31,9 +35,11 @@ def setup() -> None:
 
 
 def _setup_ollama() -> None:
-    """Подключение локальной модели через Ollama."""
-
     from llama_index.llms.ollama import Ollama
+
+    logger.info(
+        "Ollama: model=%s url=%s", settings.ollama_model, settings.ollama_base_url
+    )
 
     LlamaIndexSettings.llm = Ollama(
         model=settings.ollama_model,
@@ -45,9 +51,9 @@ def _setup_ollama() -> None:
 
 
 def _setup_openai() -> None:
-    """Подключение модели через OpenAI API."""
-
     from llama_index.llms.openai import OpenAI
+
+    logger.info("OpenAI: model=%s", settings.openai_model)
 
     LlamaIndexSettings.llm = OpenAI(
         model=settings.openai_model,
@@ -59,9 +65,9 @@ def _setup_openai() -> None:
 
 
 def _setup_vllm() -> None:
-    """Подключение модели через vLLM (OpenAI-совместимый API)."""
-
     from llama_index.llms.openai_like import OpenAILike
+
+    logger.info("vLLM: model=%s url=%s", settings.vllm_model, settings.vllm_url_base)
 
     LlamaIndexSettings.llm = OpenAILike(
         model=settings.vllm_model,
