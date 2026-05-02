@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.8.0 (2026-05-02)
+
+### Features
+
+- Add guardrails ([#26](https://github.com/113578/ableton-live-rag/pull/26),
+  [`9042781`](https://github.com/113578/ableton-live-rag/commit/90427816465d3db2935c450fbf2e06e0ccc34c8a))
+
+
 ## v0.7.0 (2026-05-02)
 
 ### Build System
