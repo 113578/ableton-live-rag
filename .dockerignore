@@ -12,5 +12,4 @@ experiments/
 tests/
 scripts/
 docker-compose.yml
-*.md
 .gitignore
