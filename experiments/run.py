@@ -2,7 +2,7 @@
 Единая точка входа для экспериментов.
 
 Поддерживает оценку ретриверов, ранжировщиков, генераторов и сквозного RAG-пайплайна,
-а также поиск оптимальных параметров чанкинга и порога релевантности.
+а также поиск оптимальных параметров чанкинга.
 
 Перед запуском создайте индексы: ``uv run scripts/build_eval_indexes.py``.
 Для команды ``chunking`` с vector/hybrid-ретривером: ``uv run scripts/build_chunking_indexes.py``.
@@ -10,7 +10,6 @@
 Примеры:
     uv run experiments/run.py retriever --top-k 5
     uv run experiments/run.py chunking --chunk-size 512 --overlap 64 --retriever vector/bm25
-    uv run experiments/run.py threshold --threshold 0.0 --threshold 0.2 --threshold 0.4 --retriever hybrid_rrf/bge
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
     uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
@@ -20,7 +19,6 @@ import asyncio
 
 import typer
 from llama_index.core import Settings as LlamaSettings
-from llama_index.core.schema import NodeWithScore
 from rich.table import Table
 
 from ableton_live_rag.config import EMBEDDING_MODELS
@@ -547,40 +545,6 @@ def _print_chunking_table(results: list[dict], top_k: int, retriever: str) -> No
     console.print()
 
 
-def _print_threshold_table(results: list[dict], retriever: str) -> None:
-    table = Table(
-        title=f"Порог релевантности: {retriever}",
-        show_lines=True,
-    )
-
-    table.add_column("Threshold", style="cyan", justify="right")
-    table.add_column("Avg results", style="magenta", justify="right")
-    table.add_column("Hit Rate", style="green", justify="right")
-    table.add_column("MRR", style="green", justify="right")
-    table.add_column("P@k", style="green", justify="right")
-    table.add_column("R@k", style="green", justify="right")
-    table.add_column("NDCG@k", style="green", justify="right")
-    table.add_column("Latency (s)", style="yellow", justify="right")
-    table.add_column("Errors", style="red", justify="right")
-
-    for r in results:
-        table.add_row(
-            f"{r['threshold']:.2f}",
-            f"{r['avg_results']:.1f}",
-            f"{r['hit_rate']:.3f}",
-            f"{r['mrr']:.3f}",
-            f"{r['precision']:.3f}",
-            f"{r['recall']:.3f}",
-            f"{r['ndcg']:.3f}",
-            f"{r['avg_latency_s']:.3f}",
-            str(r["errors"]),
-        )
-
-    console.print()
-    console.print(table)
-    console.print()
-
-
 @app.command()
 def chunking(
     chunk_sizes: list[int] = typer.Option(
@@ -676,83 +640,6 @@ def chunking(
 
     if save and results:
         save_results(results, RESULTS_DIR / "chunking")
-
-
-@app.command()
-def threshold(
-    thresholds: list[float] = typer.Option(
-        [0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
-        "--threshold",
-        "-t",
-        help="Пороги оценки релевантности",
-    ),
-    top_k: int = typer.Option(5, "--top-k", "-k", help="Количество кандидатов"),
-    retriever_name: str = typer.Option(
-        "vector/bge",
-        "--retriever",
-        "-r",
-        help=("Ретривер для оценки."),
-    ),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
-) -> None:
-    """
-    Поиск оптимального порога релевантности.
-    """
-
-    indexes, nodes, dataset = prepare_experiment()
-
-    active_embedding_configs = {
-        settings.active_embedding_model: EMBEDDING_MODELS[
-            settings.active_embedding_model
-        ]
-    }
-    retriever_configs = build_retrievers(
-        indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
-    )
-    base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
-    console.print(f"[green]Ретривер: {base_retriever.name}[/green]")
-    console.print(f"[bold]Проверка {len(thresholds)} порогов...[/bold]\n")
-
-    results: list[dict] = []
-
-    for thr in sorted(thresholds):
-
-        def _retrieve(
-            query: str,
-            _thr: float = thr,
-        ) -> list[NodeWithScore]:
-            candidates = base_retriever.retrieve(query=query, top_k=top_k)
-            return [n for n in candidates if n.score is not None and n.score >= _thr]
-
-        per_question, total_time = evaluate_dataset(
-            retrieve_fn=_retrieve,
-            dataset=dataset,
-        )
-
-        valid = [q for q in per_question if "error" not in q]
-        avg_results = (
-            sum(len(q["relevances"]) for q in valid) / len(valid) if valid else 0.0
-        )
-
-        result = {
-            "threshold": thr,
-            "avg_results": round(avg_results, 2),
-            "retriever": retriever_name,
-            **aggregate_retrieval_metrics(per_question, total_time),
-        }
-        results.append(result)
-        console.print(
-            f"  thr={thr:.2f}  avg_results={avg_results:.1f}  "
-            + format_retrieval_summary(result).strip()
-            + "\n"
-        )
-
-    _print_threshold_table(results, retriever_name)
-
-    if save:
-        save_results(results, RESULTS_DIR / "threshold")
 
 
 if __name__ == "__main__":
