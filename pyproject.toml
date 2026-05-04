@@ -1,7 +1,7 @@
 [project]
-name = "ableton-live-rag"
+name = "ableton-rag"
 version = "0.9.0"
-description = "RAG-система для корпуса документации Ableton: Live, Push, Music Strategies"
+description = "RAG-system for working with Ableton ecosystem's documentation"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rag = "ableton_live_rag.cli:app"
+rag = "ableton_rag.cli:app"
 
 [project.optional-dependencies]
 evaluation = [

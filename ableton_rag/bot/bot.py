@@ -10,14 +10,14 @@ from telegram.ext import (
     filters,
 )
 
-from ableton_live_rag.bot.client import RAGClient
-from ableton_live_rag.bot.handlers import (
+from ableton_rag.bot.client import RAGClient
+from ableton_rag.bot.handlers import (
     handle_message,
     help_command,
     sources_callback,
     start_command,
 )
-from ableton_live_rag.config import get_logger
+from ableton_rag.config import get_logger
 
 logger = get_logger(__name__)
 

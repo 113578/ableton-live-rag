@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.core.llms import LLM
 
-from ableton_live_rag.config import get_logger, settings
+from ableton_rag.config import get_logger, settings
 
 logger = get_logger(__name__)
 
@@ -91,7 +91,7 @@ def _guard_llm() -> LLM:
     if not settings.guard_model:
         return LlamaIndexSettings.llm
 
-    from ableton_live_rag.config import LLMProvider
+    from ableton_rag.config import LLMProvider
 
     if settings.llm_provider == LLMProvider.ollama:
         from llama_index.llms.ollama import Ollama

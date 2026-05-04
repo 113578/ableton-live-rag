@@ -12,11 +12,11 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from llama_index.core.llms import ChatMessage
 
-from ableton_live_rag import guardrails, llm
-from ableton_live_rag import query as rag_query
-from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
-from ableton_live_rag.index import get_stats
-from ableton_live_rag.api.schemas import (
+from ableton_rag import guardrails, llm
+from ableton_rag import query as rag_query
+from ableton_rag.config import EMBEDDING_MODELS, get_logger, settings
+from ableton_rag.index import get_stats
+from ableton_rag.api.schemas import (
     AskRequest,
     ChatRequest,
     SearchRequest,
@@ -27,8 +27,8 @@ logger = get_logger(__name__)
 
 
 def _run_ingest() -> None:
-    from ableton_live_rag.index import build_index
-    from ableton_live_rag.ingest import load_documents
+    from ableton_rag.index import build_index
+    from ableton_rag.ingest import load_documents
 
     documents = load_documents(pdf_path=settings.corpus_path)
     collection = EMBEDDING_MODELS[settings.active_embedding_model].collection_name

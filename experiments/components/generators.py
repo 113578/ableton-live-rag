@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from llama_index.core.llms import LLM
 from llama_index.core.prompts import RichPromptTemplate
 
-from ableton_live_rag.config import settings
+from ableton_rag.config import settings
 
 _OPENAI_LIKE_PREFIXES: list[tuple[str, str]] = [
     ("GPT_OSS", "gpt-oss"),
@@ -224,9 +224,9 @@ def make_llm(spec: GeneratorSpec) -> LLM:
 
         return Ollama(
             model=spec.model_id,
-            temperature=0.7,
+            temperature=settings.temperature,
             base_url=spec.api_base or settings.ollama_base_url,
-            request_timeout=settings.ollama_request_timeout,
+            request_timeout=settings.request_timeout,
         )
 
     if spec.backend == "openai":
@@ -234,9 +234,9 @@ def make_llm(spec: GeneratorSpec) -> LLM:
 
         return OpenAI(
             model=spec.model_id,
-            temperature=0.7,
+            temperature=settings.temperature,
             api_key=spec.api_key or None,
-            timeout=120.0,
+            timeout=settings.request_timeout,
         )
 
     if spec.backend == "openai_like":
@@ -244,11 +244,11 @@ def make_llm(spec: GeneratorSpec) -> LLM:
 
         return OpenAILike(
             model=spec.model_id,
-            temperature=0.7,
+            temperature=settings.temperature,
             api_base=spec.api_base,
             api_key=spec.api_key,
             is_chat_model=True,
-            timeout=120.0,
+            timeout=settings.request_timeout,
         )
 
     raise ValueError(f"Неизвестный бэкенд: {spec.backend!r}")

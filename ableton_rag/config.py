@@ -132,7 +132,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
 
     active_embedding_model: str = "bge"
-    collection_name: str = "ableton_live"
+    collection_name: str = "ableton"
 
     chunk_size: int = 512
     chunk_overlap: int = 64

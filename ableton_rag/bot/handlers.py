@@ -10,7 +10,7 @@ from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
-from ableton_live_rag.bot.client import RAGClient
+from ableton_rag.bot.client import RAGClient
 
 logger = logging.getLogger(__name__)
 

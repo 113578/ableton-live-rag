@@ -10,7 +10,7 @@ from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import AsyncQdrantClient, QdrantClient
 
-from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
+from ableton_rag.config import EMBEDDING_MODELS, get_logger, settings
 
 logger = get_logger(__name__)
 

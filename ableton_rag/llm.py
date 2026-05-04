@@ -5,7 +5,7 @@
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from ableton_live_rag.config import (
+from ableton_rag.config import (
     EMBEDDING_MODELS,
     EmbeddingModelConfig,
     LLMProvider,

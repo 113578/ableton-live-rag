@@ -27,8 +27,8 @@ from llama_index.storage.chat_store.redis import RedisChatStore
 from redisvl.extensions.cache.llm import SemanticCache
 from redisvl.utils.vectorize import HFTextVectorizer
 
-from ableton_live_rag import guardrails, index as idx
-from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
+from ableton_rag import guardrails, index as idx
+from ableton_rag.config import EMBEDDING_MODELS, get_logger, settings
 
 logger = get_logger(__name__)
 

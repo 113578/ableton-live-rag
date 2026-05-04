@@ -21,9 +21,9 @@ import typer
 from llama_index.core import Settings as LlamaSettings
 from rich.table import Table
 
-from ableton_live_rag.config import EMBEDDING_MODELS
-from ableton_live_rag.ingest import load_documents
-from ableton_live_rag.config import settings
+from ableton_rag.config import EMBEDDING_MODELS
+from ableton_rag.ingest import load_documents
+from ableton_rag.config import settings
 from experiments.components import (
     RerankerConfig,
     build_generators,

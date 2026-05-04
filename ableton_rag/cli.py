@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
-from ableton_live_rag.config import settings
+from ableton_rag.config import settings
 
 app = typer.Typer(
     name="rag",
@@ -26,10 +26,10 @@ def ingest() -> None:
     Загрузка PDF, разбитие на чанки, векторизация и сохранение в Qdrant.
     """
 
-    from ableton_live_rag import llm
-    from ableton_live_rag.config import EMBEDDING_MODELS
-    from ableton_live_rag.index import build_index
-    from ableton_live_rag.ingest import load_documents
+    from ableton_rag import llm
+    from ableton_rag.config import EMBEDDING_MODELS
+    from ableton_rag.index import build_index
+    from ableton_rag.ingest import load_documents
 
     with Progress(
         SpinnerColumn(),
@@ -71,9 +71,9 @@ def ask(
         используется ``settings.similarity_top_k``.
     """
 
-    from ableton_live_rag import llm
-    from ableton_live_rag.config import settings
-    from ableton_live_rag.query import ask as query_ask
+    from ableton_rag import llm
+    from ableton_rag.config import settings
+    from ableton_rag.query import ask as query_ask
 
     console.print("[dim]Инициализация...[/dim]")
     llm.setup()
@@ -138,8 +138,8 @@ def search(
         Количество результатов.
     """
 
-    from ableton_live_rag import llm
-    from ableton_live_rag.query import retrieve
+    from ableton_rag import llm
+    from ableton_rag.query import retrieve
 
     console.print("[dim]Инициализация эмбеддингов...[/dim]")
     llm.setup()
@@ -172,7 +172,7 @@ def stats() -> None:
     Выводит таблицу с количеством точек, векторов и статусом коллекции.
     """
 
-    from ableton_live_rag.index import get_stats
+    from ableton_rag.index import get_stats
 
     info = get_stats()
 
@@ -195,8 +195,8 @@ def bot() -> None:
     и отвечает на вопросы пользователей из Telegram.
     """
 
-    from ableton_live_rag.bot.bot import run
-    from ableton_live_rag.config import settings
+    from ableton_rag.bot.bot import run
+    from ableton_rag.config import settings
 
     if not settings.telegram_bot_token:
         console.print("[red]Токен бота не задан.[/red]")
@@ -225,7 +225,7 @@ def serve(
 
     import uvicorn
 
-    uvicorn.run("ableton_live_rag.api:app", host=host, port=port, reload=True)
+    uvicorn.run("ableton_rag.api:app", host=host, port=port, reload=True)
 
 
 if __name__ == "__main__":

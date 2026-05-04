@@ -5,9 +5,9 @@
 from llama_index.core import Document, Settings as LlamaSettings
 from rich.console import Console
 
-from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
-from ableton_live_rag.index import build_index
-from ableton_live_rag.ingest import load_documents
+from ableton_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
+from ableton_rag.index import build_index
+from ableton_rag.ingest import load_documents
 from experiments.utils import make_embed_model
 
 console = Console()

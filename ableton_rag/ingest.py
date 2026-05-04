@@ -13,7 +13,7 @@ from pathlib import Path
 import fitz
 from llama_index.core import Document
 
-from ableton_live_rag.config import get_logger, settings
+from ableton_rag.config import get_logger, settings
 
 logger = get_logger(__name__)
 

@@ -5,8 +5,8 @@ RAG-система по корпусу документации Ableton: Live, P
 ## Установка
 
 ```bash
-git clone https://github.com/113578/ableton-live-rag.git
-cd ableton-live-rag
+git clone https://github.com/113578/ableton-rag.git
+cd ableton-rag
 uv sync
 ```
 
@@ -69,7 +69,7 @@ uv run rag stats
 ## Структура проекта
 
 ```
-ableton_live_rag/
+ableton_rag/
   config.py        # Конфигурация проекта
   llm.py           # Настройка LlamaIndex
   ingest.py        # Парсинг PDF и извлечение TOC

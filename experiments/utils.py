@@ -17,7 +17,7 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, NodeWithScore
 from rich.console import Console
 
-from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
+from ableton_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
 from experiments.components.generators import (
     GeneratorConfig,
     load_judge_spec,
@@ -37,8 +37,8 @@ from experiments.metrics import (
     precision_at_k,
     recall_at_k,
 )
-from ableton_live_rag.index import load_index, parse_nodes
-from ableton_live_rag.ingest import load_documents
+from ableton_rag.index import load_index, parse_nodes
+from ableton_rag.ingest import load_documents
 
 _PACKAGE_DIR = Path(__file__).resolve().parent
 

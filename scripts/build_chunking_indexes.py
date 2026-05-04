@@ -12,9 +12,9 @@ import typer
 from llama_index.core import Settings as LlamaSettings
 from rich.console import Console
 
-from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
-from ableton_live_rag.index import build_index
-from ableton_live_rag.ingest import load_documents
+from ableton_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
+from ableton_rag.index import build_index
+from ableton_rag.ingest import load_documents
 from experiments.components.retrievers import make_embed_model
 from experiments.utils import chunking_collection_name
 

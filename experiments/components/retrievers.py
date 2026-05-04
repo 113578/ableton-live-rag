@@ -15,7 +15,7 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from ableton_live_rag.config import EmbeddingModelConfig
+from ableton_rag.config import EmbeddingModelConfig
 
 
 @dataclass
