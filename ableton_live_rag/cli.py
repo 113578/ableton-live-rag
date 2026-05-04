@@ -27,11 +27,9 @@ def ingest() -> None:
     """
 
     from ableton_live_rag import llm
+    from ableton_live_rag.config import EMBEDDING_MODELS
     from ableton_live_rag.index import build_index
     from ableton_live_rag.ingest import load_documents
-
-    console.print("[dim]Инициализация моделей...[/dim]")
-    llm.setup()
 
     with Progress(
         SpinnerColumn(),
@@ -43,12 +41,13 @@ def ingest() -> None:
 
     console.print(f"[green]Извлечено {len(documents)} разделов из TOC[/green]")
 
-    from ableton_live_rag.config import EMBEDDING_MODELS, settings as cfg
+    for cfg in EMBEDDING_MODELS.values():
+        console.print(
+            f"[dim]Индексирование → {cfg.collection_name} ({cfg.model_id})...[/dim]"
+        )
 
-    collection = EMBEDDING_MODELS[cfg.active_embedding_model].collection_name
-    console.print(f"[dim]Индексирование → {collection}...[/dim]")
-
-    build_index(documents, collection_name=collection)
+        llm.setup_embedding(cfg)
+        build_index(documents, collection_name=cfg.collection_name)
 
     console.print("[bold green]✓ Индексирование завершено![/bold green]")
 
