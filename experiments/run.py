@@ -45,6 +45,7 @@ from experiments.utils import (
     format_generator_summary,
     format_retrieval_summary,
     load_dataset,
+    load_indexes,
     load_indexes_for_chunking,
     parse_nodes_with_config,
     prepare_experiment,
@@ -54,6 +55,32 @@ from experiments.utils import (
 app = typer.Typer(no_args_is_help=True)
 
 _RERANKER_MULTIPLIERS = [2, 3, 5]
+
+
+def _load_active(dataset_path=None) -> tuple[list, list, list]:
+    active_cfg = EMBEDDING_MODELS[settings.active_embedding_model]
+    active_embedding_configs = {settings.active_embedding_model: active_cfg}
+
+    LlamaSettings.chunk_size = settings.chunk_size
+    LlamaSettings.chunk_overlap = settings.chunk_overlap
+
+    console.print("[dim]Загрузка документов...[/dim]")
+    documents = load_documents()
+    nodes = parse_nodes_with_config(
+        documents, settings.chunk_size, settings.chunk_overlap
+    )
+
+    console.print("[dim]Загрузка индекса из Qdrant...[/dim]")
+    indexes = load_indexes(active_embedding_configs)
+
+    dataset = load_dataset(dataset_path) if dataset_path else load_dataset()
+    console.print(f"[green]Загружено {len(dataset)} вопросов[/green]")
+
+    retriever_configs = build_retrievers(
+        indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
+    )
+
+    return retriever_configs, nodes, dataset
 
 
 def _print_retriever_table(results: list[dict], top_k: int) -> None:
@@ -243,10 +270,10 @@ def reranker(
         5, "--top-k", "-k", help="Количество финальных результатов"
     ),
     retriever_name: str = typer.Option(
-        "hybrid_rrf/e5",
+        "vector/bge",
         "--retriever",
         "-r",
-        help="Базовый ретривер (например hybrid_rrf/e5, vector/bge, bm25)",
+        help="Ретривер",
     ),
     save: bool = typer.Option(
         False, "--save", help="Сохранить детальные результаты в JSON"
@@ -256,11 +283,7 @@ def reranker(
     Оценка ранжировщиков поверх базового ретривера.
     """
 
-    indexes, nodes, dataset = prepare_experiment()
-
-    retriever_configs = build_retrievers(
-        indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
-    )
+    retriever_configs, _, dataset = _load_active()
     base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
     console.print(f"[green]Базовый ретривер: {base_retriever.name}[/green]")
 
@@ -300,10 +323,10 @@ def generator(
         5, "--top-k", "-k", help="Количество фрагментов контекста"
     ),
     retriever_name: str = typer.Option(
-        "hybrid_rrf/e5",
+        "vector/bge",
         "--retriever",
         "-r",
-        help="Базовый ретривер (например hybrid_rrf/e5, vector/bge, bm25)",
+        help="Базовый ретривер (например vector/bge, hybrid_rrf/bge, bm25)",
     ),
     reranker_name: str | None = typer.Option(
         None, "--reranker", help="Имя ранжировщика (опционально)"
@@ -322,11 +345,7 @@ def generator(
     Оценка генераторов поверх фиксированного ретривера.
     """
 
-    indexes, nodes, dataset = prepare_experiment()
-
-    retriever_configs = build_retrievers(
-        indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
-    )
+    retriever_configs, _, dataset = _load_active()
     base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
     console.print(f"[green]Базовый ретривер: {base_retriever.name}[/green]")
 
@@ -379,7 +398,7 @@ def end2end(
         5, "--top-k", "-k", help="Количество фрагментов контекста"
     ),
     retriever_name: str = typer.Option(
-        "hybrid_rrf/e5", "--retriever", "-r", help="Базовый ретривер"
+        "vector/bge", "--retriever", "-r", help="Ретривер"
     ),
     reranker_name: str | None = typer.Option(None, "--reranker", help="Ранжировщик"),
     candidate_k: int = typer.Option(
@@ -396,14 +415,7 @@ def end2end(
     Сквозная оценка всех компонентов.
     """
 
-    indexes, nodes, _ = prepare_experiment()
-    dataset = load_dataset(TEST_DATASET_PATH)
-    console.print(
-        f"[green]Загружено {len(dataset)} вопросов из тестового датасета[/green]"
-    )
-    retriever_configs = build_retrievers(
-        indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
-    )
+    retriever_configs, _, dataset = _load_active(TEST_DATASET_PATH)
 
     retriever_results: list[dict] = []
 
