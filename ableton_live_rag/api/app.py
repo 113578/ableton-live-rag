@@ -168,7 +168,12 @@ async def chat(req: ChatRequest) -> StreamingResponse:
     async def _generate():
         yield _sse({"type": "session_id", "content": session_id})
 
-        guard_result = await guardrails.guard(req.message)
+        history_messages = await asyncio.to_thread(
+            rag_query._chat_store.get_messages, session_id
+        )
+        history = [m.content for m in history_messages[-4:] if m.content]
+
+        guard_result = await guardrails.guard(req.message, history=history)
 
         if not guard_result.safe:
             yield _sse(
@@ -191,8 +196,8 @@ async def chat(req: ChatRequest) -> StreamingResponse:
             sources: list[dict] = json.loads(
                 cached[0].get("metadata", {}).get("sources", "[]")
             )
-            engine.memory.put(ChatMessage(role="user", content=query))
-            engine.memory.put(ChatMessage(role="assistant", content=full_text))
+            engine._memory.put(ChatMessage(role="user", content=query))
+            engine._memory.put(ChatMessage(role="assistant", content=full_text))
 
             yield _sse({"type": "token", "content": full_text})
         else:

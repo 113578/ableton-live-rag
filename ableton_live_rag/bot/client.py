@@ -28,12 +28,21 @@ class RAGClient:
         timeout: float = 120,
     ) -> AsyncIterator[tuple[str, object]]:
         """
-        Отправка сообщения и получение потока SSE-событий.
+        Стримит SSE-события от эндпоинта /chat.
+
+        Parameters
+        ----------
+        message : str
+            Текст сообщения пользователя.
+        session_id : str or None, optional
+            Идентификатор сессии для сохранения истории диалога.
+        timeout : float, optional
+            Таймаут HTTP-соединения в секундах.
 
         Yields
         ------
         tuple[str, object]
-            Пара ``(event_type, content)`` для каждого события.
+            Пара ``(event_type, content)`` для каждого SSE-события.
         """
 
         async with httpx.AsyncClient(timeout=timeout) as client:
@@ -63,9 +72,3 @@ class RAGClient:
 
                 except httpx.RemoteProtocolError:
                     return
-
-    async def delete_session(self, session_id: str) -> None:
-        """Удаление сессии на сервере."""
-
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            await client.delete(f"{self.base_url}/chat/{session_id}")

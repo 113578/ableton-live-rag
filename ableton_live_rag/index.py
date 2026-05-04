@@ -10,12 +10,16 @@ from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import AsyncQdrantClient, QdrantClient
 
-from ableton_live_rag.config import get_logger, settings
+from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
 
 logger = get_logger(__name__)
 
 _qdrant_client: QdrantClient | None = None
 _async_qdrant_client: AsyncQdrantClient | None = None
+
+
+def _active_collection() -> str:
+    return EMBEDDING_MODELS[settings.active_embedding_model].collection_name
 
 
 def _get_qdrant_client() -> QdrantClient:
@@ -42,32 +46,28 @@ def _get_qdrant_client() -> QdrantClient:
     return _qdrant_client
 
 
-def _get_async_qdrant_client() -> AsyncQdrantClient:
+def _get_async_qdrant_client() -> AsyncQdrantClient | None:
     """
     Получение экземпляра AsyncQdrantClient (синглтон).
 
     Returns
     -------
-    AsyncQdrantClient
-        Асинхронный клиент Qdrant.
+    AsyncQdrantClient or None
+        Асинхронный клиент Qdrant, либо ``None`` для локального хранилища.
     """
 
     global _async_qdrant_client
 
+    if not settings.qdrant_url:
+        return None
+
     if _async_qdrant_client is None:
-        if settings.qdrant_url:
-            _async_qdrant_client = AsyncQdrantClient(url=settings.qdrant_url)
-        else:
-            settings.qdrant_path.mkdir(parents=True, exist_ok=True)
-            _async_qdrant_client = AsyncQdrantClient(path=str(settings.qdrant_path))
+        _async_qdrant_client = AsyncQdrantClient(url=settings.qdrant_url)
 
     return _async_qdrant_client
 
 
-def _get_vector_store(
-    client: QdrantClient,
-    collection_name: str | None = None,
-) -> QdrantVectorStore:
+def _get_vector_store(collection_name: str | None = None) -> QdrantVectorStore:
     """
     Создание QdrantVectorStore.
 
@@ -82,10 +82,12 @@ def _get_vector_store(
         Хранилище векторов для LlamaIndex.
     """
 
+    aclient = _get_async_qdrant_client()
+
     return QdrantVectorStore(
         client=_get_qdrant_client(),
-        aclient=_get_async_qdrant_client(),
-        collection_name=collection_name or settings.collection_name,
+        aclient=aclient,
+        collection_name=collection_name or _active_collection(),
     )
 
 
@@ -109,7 +111,7 @@ def build_index(
         Сохранённый индекс.
     """
 
-    name = collection_name or settings.collection_name
+    name = collection_name or _active_collection()
     client = _get_qdrant_client()
 
     logger.info("Building index '%s' from %d documents...", name, len(documents))
@@ -119,7 +121,7 @@ def build_index(
     except Exception:
         pass
 
-    vector_store = _get_vector_store(client=client, collection_name=name)
+    vector_store = _get_vector_store(collection_name=name)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     index = VectorStoreIndex.from_documents(
         documents=documents,
@@ -152,7 +154,7 @@ def load_index(collection_name: str | None = None) -> VectorStoreIndex:
         Если коллекция не найдена (инжест не был выполнен).
     """
 
-    name = collection_name or settings.collection_name
+    name = collection_name or _active_collection()
     client = _get_qdrant_client()
 
     if not client.collection_exists(collection_name=name):
@@ -162,7 +164,7 @@ def load_index(collection_name: str | None = None) -> VectorStoreIndex:
 
     logger.info("Loading index from collection '%s'.", name)
 
-    vector_store = _get_vector_store(client=client, collection_name=name)
+    vector_store = _get_vector_store(collection_name=name)
 
     return VectorStoreIndex.from_vector_store(vector_store)
 
@@ -206,7 +208,7 @@ def get_stats(collection_name: str | None = None) -> dict:
         ``indexed_vectors_count``, ``status``.
     """
 
-    name = collection_name or settings.collection_name
+    name = collection_name or _active_collection()
     client = _get_qdrant_client()
 
     try:
@@ -240,7 +242,7 @@ def get_all_nodes(collection_name: str | None = None) -> list[BaseNode]:
         Все узлы коллекции.
     """
 
-    name = collection_name or settings.collection_name
+    name = collection_name or _active_collection()
     client = _get_qdrant_client()
     nodes: list[BaseNode] = []
     offset = None

@@ -5,21 +5,44 @@
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from ableton_live_rag.config import LLMProvider, get_logger, settings
+from ableton_live_rag.config import (
+    EMBEDDING_MODELS,
+    EmbeddingModelConfig,
+    LLMProvider,
+    get_logger,
+    settings,
+)
 
 logger = get_logger(__name__)
 
 
+def setup_embedding(cfg: EmbeddingModelConfig) -> None:
+    """
+    Настройка модели эмбеддингов в LlamaIndex.
+
+    Parameters
+    ----------
+    cfg : EmbeddingModelConfig
+        Конфигурация модели эмбеддингов.
+    """
+
+    logger.info("Embedding model: %s", cfg.model_id)
+
+    LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
+        model_name=cfg.model_id,
+        query_instruction=cfg.query_instruction,
+        text_instruction=cfg.text_instruction,
+    )
+
+
 def setup() -> None:
     """
-    Настройка параметров LlamaIndex.
+    Настройка параметров LlamaIndex: активная модель эмбеддингов и LLM.
     """
 
     logger.info("Setting up LLM provider: %s", settings.llm_provider.value)
 
-    LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
-        model_name=settings.embedding_model,
-    )
+    setup_embedding(EMBEDDING_MODELS[settings.active_embedding_model])
 
     LlamaIndexSettings.chunk_size = settings.chunk_size
     LlamaIndexSettings.chunk_overlap = settings.chunk_overlap

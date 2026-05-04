@@ -62,14 +62,14 @@ def test_precision_and_recall_at_k():
 
 
 def test_ndcg_at_k_ranks_earlier_hits_higher():
-    perfect = ndcg_at_k([True, False, False])
-    later = ndcg_at_k([False, False, True])
+    perfect = ndcg_at_k([True, False, False], total_relevant=1)
+    later = ndcg_at_k([False, False, True], total_relevant=1)
 
     assert perfect == 1.0
     assert 0 < later < 1
     assert later == 1.0 / math.log2(4)
 
-    assert ndcg_at_k([False, False]) == 0.0
+    assert ndcg_at_k([False, False], total_relevant=1) == 0.0
 
 
 def test_count_total_relevant_deduplicates_overlapping_ranges():

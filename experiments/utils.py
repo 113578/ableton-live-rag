@@ -11,12 +11,13 @@ from pathlib import Path
 import typer
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
-from llama_index.core import Settings as LlamaSettings
+from llama_index.core import Document, Settings as LlamaSettings
 from llama_index.core import VectorStoreIndex
+from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, NodeWithScore
 from rich.console import Console
 
-from ableton_live_rag.config import EMBEDDING_MODELS, settings
+from ableton_live_rag.config import EMBEDDING_MODELS, EmbeddingModelConfig, settings
 from experiments.components.generators import (
     GeneratorConfig,
     load_judge_spec,
@@ -43,6 +44,7 @@ _PACKAGE_DIR = Path(__file__).resolve().parent
 
 DATASETS_DIR = _PACKAGE_DIR / "datasets"
 DATASET_PATH = DATASETS_DIR / "eval.json"
+TEST_DATASET_PATH = DATASETS_DIR / "test.json"
 RESULTS_DIR = _PACKAGE_DIR / "eval_results"
 
 GENERATOR_META_KEYS: set[str] = {
@@ -103,6 +105,100 @@ def load_indexes(
         indexes[key] = load_index(collection_name=emb.collection_name)
 
     return indexes
+
+
+def chunking_collection_name(
+    emb: EmbeddingModelConfig,
+    chunk_size: int,
+    overlap: int,
+) -> str:
+    """
+    Имя коллекции Qdrant для настройки параметров чанкинга.
+
+    Parameters
+    ----------
+    emb : EmbeddingModelConfig
+        Конфигурация модели эмбеддингов.
+    chunk_size : int
+        Размер чанка в токенах.
+    overlap : int
+        Перекрытие чанков в токенах.
+
+    Returns
+    -------
+    str
+        Имя коллекции вида ``{base}_cs{chunk_size}_co{overlap}``.
+    """
+
+    return f"{emb.collection_name}_cs{chunk_size}_co{overlap}"
+
+
+def load_indexes_for_chunking(
+    chunk_size: int,
+    overlap: int,
+    embedding_cfg: EmbeddingModelConfig,
+) -> dict[str, VectorStoreIndex]:
+    """
+    Загрузка Qdrant-индексов для настройки параметров чанкинга.
+
+    Parameters
+    ----------
+    chunk_size : int
+        Размер чанка в токенах.
+    overlap : int
+        Перекрытие чанков в токенах.
+    models : dict[str, EmbeddingModelConfig] or None, optional
+        Модели эмбеддингов.
+
+    Returns
+    -------
+    dict[str, VectorStoreIndex]
+        Индексы по имени модели.
+
+    Raises
+    ------
+    RuntimeError
+        Если коллекция не найдена — нужно запустить ``build_chunking_indexes.py``.
+    """
+
+    indexes: dict[str, VectorStoreIndex] = {}
+
+    cname = chunking_collection_name(embedding_cfg, chunk_size, overlap)
+
+    console.print(f"[dim]  Загрузка индекса {cname}...[/dim]")
+
+    LlamaSettings.embed_model = make_embed_model(embedding_cfg)
+    indexes[embedding_cfg.name] = load_index(collection_name=cname)
+
+    return indexes
+
+
+def parse_nodes_with_config(
+    documents: list[Document],
+    chunk_size: int,
+    overlap: int,
+) -> list[BaseNode]:
+    """
+    Разбивка документов на чанки с заданными параметрами.
+
+    Parameters
+    ----------
+    documents : list[Document]
+        Список документов.
+    chunk_size : int
+        Максимальный размер чанка в токенах.
+    overlap : int
+        Перекрытие чанков в токенах.
+
+    Returns
+    -------
+    list[BaseNode]
+        Список чанков.
+    """
+
+    parser = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=overlap)
+
+    return parser.get_nodes_from_documents(documents=documents)
 
 
 def prepare_experiment() -> tuple[
@@ -259,10 +355,19 @@ def evaluate_dataset(
             ground_truth_ranges=gt,
         )
 
+        seen: set[tuple[str, int]] = set()
+        dedup_rels: list[bool] = []
+
+        for (s, p), rel in zip(retrieved, rels):
+            if (s, p) not in seen:
+                seen.add((s, p))
+                dedup_rels.append(rel)
+
         per_question.append(
             {
                 "id": item["id"],
                 "relevances": rels,
+                "dedup_relevances": dedup_rels,
                 "retrieved": [f"{s}:p{p}" for s, p in retrieved],
                 "total_relevant": count_total_relevant(ground_truth_ranges=gt),
                 "latency_s": round(elapsed, 3),
@@ -297,10 +402,15 @@ def aggregate_retrieval_metrics(per_question: list[dict], total_time: float) -> 
         "mrr": round(sum(mrr(q["relevances"]) for q in valid) / n, 3),
         "precision": round(sum(precision_at_k(q["relevances"]) for q in valid) / n, 3),
         "recall": round(
-            sum(recall_at_k(q["relevances"], q["total_relevant"]) for q in valid) / n,
+            sum(recall_at_k(q["dedup_relevances"], q["total_relevant"]) for q in valid)
+            / n,
             3,
         ),
-        "ndcg": round(sum(ndcg_at_k(q["relevances"]) for q in valid) / n, 3),
+        "ndcg": round(
+            sum(ndcg_at_k(q["dedup_relevances"], q["total_relevant"]) for q in valid)
+            / n,
+            3,
+        ),
         "avg_latency_s": round(total_time / n, 3),
         "errors": sum(1 for q in per_question if "error" in q),
         "details": per_question,

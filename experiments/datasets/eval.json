@@ -446,5 +446,257 @@
     "source": "making_music",
     "ground_truth_pages": [[259, 262]],
     "category": "conceptual"
+  },
+  {
+    "id": "q65",
+    "question": "How do I use the Echo audio effect?",
+    "source": "live_12",
+    "ground_truth_pages": [[547, 550]],
+    "category": "procedural"
+  },
+  {
+    "id": "q66",
+    "question": "What is the Saturator effect and how does it shape sound?",
+    "source": "live_12",
+    "ground_truth_pages": [[605, 607]],
+    "category": "factual"
+  },
+  {
+    "id": "q67",
+    "question": "How does the Auto Pan / Tremolo effect work?",
+    "source": "live_12",
+    "ground_truth_pages": [[511, 514]],
+    "category": "factual"
+  },
+  {
+    "id": "q68",
+    "question": "What is the Auto Shift effect and what modes does it have?",
+    "source": "live_12",
+    "ground_truth_pages": [[515, 522]],
+    "category": "factual"
+  },
+  {
+    "id": "q69",
+    "question": "What does the Limiter effect do and how do I set the Ceiling parameter?",
+    "source": "live_12",
+    "ground_truth_pages": [[572, 572]],
+    "category": "procedural"
+  },
+  {
+    "id": "q70",
+    "question": "What is the Spectrum analyzer used for?",
+    "source": "live_12",
+    "ground_truth_pages": [[622, 622]],
+    "category": "factual"
+  },
+  {
+    "id": "q71",
+    "question": "How do I use the Tuner audio effect to tune instruments?",
+    "source": "live_12",
+    "ground_truth_pages": [[623, 628]],
+    "category": "procedural"
+  },
+  {
+    "id": "q72",
+    "question": "What does the Utility effect do and what are its main controls?",
+    "source": "live_12",
+    "ground_truth_pages": [[629, 630]],
+    "category": "factual"
+  },
+  {
+    "id": "q73",
+    "question": "How does the Channel EQ work and what frequency bands does it have?",
+    "source": "live_12",
+    "ground_truth_pages": [[527, 528]],
+    "category": "factual"
+  },
+  {
+    "id": "q74",
+    "question": "How do I use the Gate audio effect?",
+    "source": "live_12",
+    "ground_truth_pages": [[558, 560]],
+    "category": "procedural"
+  },
+  {
+    "id": "q75",
+    "question": "What is the Roar effect and what are its main features?",
+    "source": "live_12",
+    "ground_truth_pages": [[596, 604]],
+    "category": "factual"
+  },
+  {
+    "id": "q76",
+    "question": "What is the Spectral Resonator and how does it transform audio?",
+    "source": "live_12",
+    "ground_truth_pages": [[613, 617]],
+    "category": "factual"
+  },
+  {
+    "id": "q77",
+    "question": "How does the Drum Sampler instrument work?",
+    "source": "live_12",
+    "ground_truth_pages": [[675, 680]],
+    "category": "factual"
+  },
+  {
+    "id": "q78",
+    "question": "What is the Electric instrument and what kind of pianos does it model?",
+    "source": "live_12",
+    "ground_truth_pages": [[681, 685]],
+    "category": "factual"
+  },
+  {
+    "id": "q79",
+    "question": "What is the Meld synthesizer and how does it generate sound?",
+    "source": "live_12",
+    "ground_truth_pages": [[690, 699]],
+    "category": "factual"
+  },
+  {
+    "id": "q80",
+    "question": "What is the Tension instrument and how does it model strings?",
+    "source": "live_12",
+    "ground_truth_pages": [[747, 758]],
+    "category": "factual"
+  },
+  {
+    "id": "q81",
+    "question": "How does the Collision instrument simulate percussion sounds?",
+    "source": "live_12",
+    "ground_truth_pages": [[658, 666]],
+    "category": "factual"
+  },
+  {
+    "id": "q82",
+    "question": "How does the Chord MIDI effect work?",
+    "source": "live_12",
+    "ground_truth_pages": [[640, 641]],
+    "category": "factual"
+  },
+  {
+    "id": "q83",
+    "question": "How do I use the Random MIDI effect to add variation?",
+    "source": "live_12",
+    "ground_truth_pages": [[644, 645]],
+    "category": "procedural"
+  },
+  {
+    "id": "q84",
+    "question": "What does the Scale MIDI effect do?",
+    "source": "live_12",
+    "ground_truth_pages": [[646, 646]],
+    "category": "factual"
+  },
+  {
+    "id": "q85",
+    "question": "How do I use Locators in the Arrangement View?",
+    "source": "live_12",
+    "ground_truth_pages": [[150, 151]],
+    "category": "procedural"
+  },
+  {
+    "id": "q86",
+    "question": "How do I create fades and crossfades on audio clips in the Arrangement View?",
+    "source": "live_12",
+    "ground_truth_pages": [[157, 158]],
+    "category": "procedural"
+  },
+  {
+    "id": "q87",
+    "question": "How do I bounce tracks or selections to audio?",
+    "source": "live_12",
+    "ground_truth_pages": [[403, 407]],
+    "category": "procedural"
+  },
+  {
+    "id": "q88",
+    "question": "How do I configure and assign Macro Controls in a Rack?",
+    "source": "live_12",
+    "ground_truth_pages": [[463, 466]],
+    "category": "procedural"
+  },
+  {
+    "id": "q89",
+    "question": "How do I configure Push hardware settings using the Setup menu?",
+    "source": "push_3",
+    "ground_truth_pages": [[10, 15]],
+    "category": "procedural"
+  },
+  {
+    "id": "q90",
+    "question": "How does the Loop Selector layout work for step sequencing on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[67, 70]],
+    "category": "procedural"
+  },
+  {
+    "id": "q91",
+    "question": "How do I save a custom device preset on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[51, 53]],
+    "category": "procedural"
+  },
+  {
+    "id": "q92",
+    "question": "How do I step sequence melodies and harmonies on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[86, 89]],
+    "category": "procedural"
+  },
+  {
+    "id": "q93",
+    "question": "How do I mix tracks and adjust track levels on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[134, 138]],
+    "category": "procedural"
+  },
+  {
+    "id": "q94",
+    "question": "What is User Mode on Push and how is it used for custom mappings?",
+    "source": "push_3",
+    "ground_truth_pages": [[144, 146]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q95",
+    "question": "What is Active Listening and how can it improve music production?",
+    "source": "making_music",
+    "ground_truth_pages": [[22, 25]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q96",
+    "question": "Why might it be useful to listen to music you hate?",
+    "source": "making_music",
+    "ground_truth_pages": [[26, 28]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q97",
+    "question": "What is Linear Drumming and how does it differ from typical beat programming?",
+    "source": "making_music",
+    "ground_truth_pages": [[144, 148]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q98",
+    "question": "What does sampling the 'old-fashioned way' mean and why use it?",
+    "source": "making_music",
+    "ground_truth_pages": [[173, 177]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q99",
+    "question": "What is Maximal Density and how does it help when extending an arrangement?",
+    "source": "making_music",
+    "ground_truth_pages": [[244, 246]],
+    "category": "conceptual"
+  },
+  {
+    "id": "q100",
+    "question": "What are the common elements of song form such as verse, chorus, and bridge?",
+    "source": "making_music",
+    "ground_truth_pages": [[269, 271]],
+    "category": "conceptual"
   }
 ]

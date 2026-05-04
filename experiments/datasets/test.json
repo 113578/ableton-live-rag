@@ -73,7 +73,7 @@
     "id": "t11",
     "question": "How do I activate Ableton Cloud on Push?",
     "source": "push_3",
-    "ground_truth_pages": [[23, 24]],
+    "ground_truth_pages": [[24, 24]],
     "category": "procedural"
   },
   {
@@ -109,6 +109,69 @@
     "question": "What are three ways to end a song?",
     "source": "making_music",
     "ground_truth_pages": [[280, 282]],
+    "category": "conceptual"
+  },
+  {
+    "id": "t17",
+    "question": "What is the Drum Buss effect and how does it process drum signals?",
+    "source": "live_12",
+    "ground_truth_pages": [[544, 545]],
+    "category": "factual"
+  },
+  {
+    "id": "t18",
+    "question": "How does the Pedal audio effect emulate guitar pedals?",
+    "source": "live_12",
+    "ground_truth_pages": [[583, 585]],
+    "category": "factual"
+  },
+  {
+    "id": "t19",
+    "question": "What is the Phaser-Flanger effect and what modes does it offer?",
+    "source": "live_12",
+    "ground_truth_pages": [[586, 588]],
+    "category": "factual"
+  },
+  {
+    "id": "t20",
+    "question": "How does the Velocity MIDI effect transform incoming note velocities?",
+    "source": "live_12",
+    "ground_truth_pages": [[647, 648]],
+    "category": "factual"
+  },
+  {
+    "id": "t21",
+    "question": "How do I add and edit time signature changes in the Arrangement View?",
+    "source": "live_12",
+    "ground_truth_pages": [[152, 153]],
+    "category": "procedural"
+  },
+  {
+    "id": "t22",
+    "question": "How does the 16 Velocities layout work on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[71, 71]],
+    "category": "procedural"
+  },
+  {
+    "id": "t23",
+    "question": "How do I set the tempo and configure the metronome on Push?",
+    "source": "push_3",
+    "ground_truth_pages": [[41, 44]],
+    "category": "procedural"
+  },
+  {
+    "id": "t24",
+    "question": "How does creating mutations of clones help develop a musical idea?",
+    "source": "making_music",
+    "ground_truth_pages": [[104, 105]],
+    "category": "conceptual"
+  },
+  {
+    "id": "t25",
+    "question": "How does erasing material help simplify and improve a track?",
+    "source": "making_music",
+    "ground_truth_pages": [[263, 265]],
     "category": "conceptual"
   }
 ]

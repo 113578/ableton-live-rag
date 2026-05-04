@@ -100,14 +100,21 @@ def recall_at_k(
     return sum(rels) / total_relevant
 
 
-def ndcg_at_k(relevances: list[bool], k: int | None = None) -> float:
+def ndcg_at_k(
+    relevances: list[bool],
+    total_relevant: int,
+    k: int | None = None,
+) -> float:
     """
     Расчёт NDCG@k.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка.
+        Бинарные релевантности ранжированного списка (по одной записи на
+        уникальную страницу — передавайте dedup_relevances).
+    total_relevant : int
+        Общее число релевантных страниц в коллекции (из ground truth).
     k : int or None, optional
         Первые k результатов.
 
@@ -124,8 +131,8 @@ def ndcg_at_k(relevances: list[bool], k: int | None = None) -> float:
 
     dcg = sum((1.0 if rel else 0.0) / math.log2(i + 2) for i, rel in enumerate(rels))
 
-    n_relevant = sum(rels)
-    idcg = sum(1.0 / math.log2(i + 2) for i in range(n_relevant))
+    ideal_relevant = min(total_relevant, len(rels))
+    idcg = sum(1.0 / math.log2(i + 2) for i in range(ideal_relevant))
 
     return dcg / idcg if idcg > 0 else 0.0
 
