@@ -2,6 +2,64 @@
 
 <!-- version list -->
 
+## v0.9.0 (2026-05-04)
+
+### Bug Fixes
+
+- Fix active embedder ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Fix model ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Fix ndcg@k scoring ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Fix Qdrant client ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Fix redis attribute name ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Remove relevancy threshold experiments ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+### Build System
+
+- Update healthcheck for backend ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+### Features
+
+- Add build chunking indexes script ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add chunking and fix metrics ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add chunking and relevancy experiments ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add chunking experiments ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add history to guardrails ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add new messages and inline keyboard for sources
+  ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add new text ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Add setup for embedder ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+- Use vector retriever ([#27](https://github.com/113578/ableton-live-rag/pull/27),
+  [`758e82d`](https://github.com/113578/ableton-live-rag/commit/758e82d4d75f6d845d616d18ed696ffff42518af))
+
+
 ## v0.8.0 (2026-05-02)
 
 ### Features
