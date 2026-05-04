@@ -1,12 +1,16 @@
 """
 Единая точка входа для экспериментов.
 
-Поддерживает оценку ретриверов, ранжировщиков, генераторов и сквозного RAG-пайплайна.
+Поддерживает оценку ретриверов, ранжировщиков, генераторов и сквозного RAG-пайплайна,
+а также поиск оптимальных параметров чанкинга и порога релевантности.
 
 Перед запуском создайте индексы: ``uv run scripts/build_eval_indexes.py``.
+Для команды ``chunking`` с vector/hybrid-ретривером: ``uv run scripts/build_chunking_indexes.py``.
 
 Примеры:
     uv run experiments/run.py retriever --top-k 5
+    uv run experiments/run.py chunking --chunk-size 512 --overlap 64 --retriever vector/bm25
+    uv run experiments/run.py threshold --threshold 0.0 --threshold 0.2 --threshold 0.4 --retriever hybrid_rrf/bge
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
     uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
@@ -15,9 +19,13 @@
 import asyncio
 
 import typer
+from llama_index.core import Settings as LlamaSettings
+from llama_index.core.schema import NodeWithScore
 from rich.table import Table
 
 from ableton_live_rag.config import EMBEDDING_MODELS
+from ableton_live_rag.ingest import load_documents
+from ableton_live_rag.config import settings
 from experiments.components import (
     RerankerConfig,
     build_generators,
@@ -27,6 +35,7 @@ from experiments.components import (
 from experiments.utils import (
     GENERATOR_META_KEYS,
     RESULTS_DIR,
+    TEST_DATASET_PATH,
     aggregate_retrieval_metrics,
     build_judge_metrics,
     build_retrieval_pipeline,
@@ -37,6 +46,9 @@ from experiments.utils import (
     find_by_name,
     format_generator_summary,
     format_retrieval_summary,
+    load_dataset,
+    load_indexes_for_chunking,
+    parse_nodes_with_config,
     prepare_experiment,
     save_results,
 )
@@ -386,7 +398,11 @@ def end2end(
     Сквозная оценка всех компонентов.
     """
 
-    indexes, nodes, dataset = prepare_experiment()
+    indexes, nodes, _ = prepare_experiment()
+    dataset = load_dataset(TEST_DATASET_PATH)
+    console.print(
+        f"[green]Загружено {len(dataset)} вопросов из тестового датасета[/green]"
+    )
     retriever_configs = build_retrievers(
         indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
     )
@@ -493,6 +509,252 @@ def end2end(
             },
             RESULTS_DIR / "end2end",
         )
+
+
+def _print_chunking_table(results: list[dict], top_k: int, retriever: str) -> None:
+    table = Table(
+        title=f"Чанкинг: {retriever} (top_k={top_k})",
+        show_lines=True,
+    )
+
+    table.add_column("chunk_size", style="cyan", justify="right")
+    table.add_column("overlap", style="magenta", justify="right")
+    table.add_column("nodes", style="dim", justify="right")
+    table.add_column("Hit Rate", style="green", justify="right")
+    table.add_column("MRR", style="green", justify="right")
+    table.add_column("P@k", style="green", justify="right")
+    table.add_column("R@k", style="green", justify="right")
+    table.add_column("NDCG@k", style="green", justify="right")
+    table.add_column("Latency (s)", style="yellow", justify="right")
+    table.add_column("Errors", style="red", justify="right")
+
+    for r in results:
+        table.add_row(
+            str(r["chunk_size"]),
+            str(r["overlap"]),
+            str(r["nodes_count"]),
+            f"{r['hit_rate']:.3f}",
+            f"{r['mrr']:.3f}",
+            f"{r['precision']:.3f}",
+            f"{r['recall']:.3f}",
+            f"{r['ndcg']:.3f}",
+            f"{r['avg_latency_s']:.3f}",
+            str(r["errors"]),
+        )
+
+    console.print()
+    console.print(table)
+    console.print()
+
+
+def _print_threshold_table(results: list[dict], retriever: str) -> None:
+    table = Table(
+        title=f"Порог релевантности: {retriever}",
+        show_lines=True,
+    )
+
+    table.add_column("Threshold", style="cyan", justify="right")
+    table.add_column("Avg results", style="magenta", justify="right")
+    table.add_column("Hit Rate", style="green", justify="right")
+    table.add_column("MRR", style="green", justify="right")
+    table.add_column("P@k", style="green", justify="right")
+    table.add_column("R@k", style="green", justify="right")
+    table.add_column("NDCG@k", style="green", justify="right")
+    table.add_column("Latency (s)", style="yellow", justify="right")
+    table.add_column("Errors", style="red", justify="right")
+
+    for r in results:
+        table.add_row(
+            f"{r['threshold']:.2f}",
+            f"{r['avg_results']:.1f}",
+            f"{r['hit_rate']:.3f}",
+            f"{r['mrr']:.3f}",
+            f"{r['precision']:.3f}",
+            f"{r['recall']:.3f}",
+            f"{r['ndcg']:.3f}",
+            f"{r['avg_latency_s']:.3f}",
+            str(r["errors"]),
+        )
+
+    console.print()
+    console.print(table)
+    console.print()
+
+
+@app.command()
+def chunking(
+    chunk_sizes: list[int] = typer.Option(
+        [128, 256, 512, 1024],
+        "--chunk-size",
+        "-c",
+        help="Размеры чанков в токенах",
+    ),
+    overlaps: list[int] = typer.Option(
+        [16, 32, 64, 128],
+        "--overlap",
+        "-o",
+        help="Перекрытия чанков в токенах",
+    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Количество результатов"),
+    retriever_name: str = typer.Option(
+        "bm25",
+        "--retriever",
+        "-r",
+        help=(
+            "Ретривер для оценки (bm25, tfidf — без pre-built индексов; "
+            "vector/bge, hybrid_rrf/e5 и т.д. — запустите build_chunking_indexes.py)"
+        ),
+    ),
+    save: bool = typer.Option(
+        False, "--save", help="Сохранить детальные результаты в JSON"
+    ),
+) -> None:
+    """
+    Поиск оптимальных параметров чанкинга (chunk_size × overlap).
+    """
+
+    is_sparse = retriever_name in ("bm25", "tfidf")
+
+    console.print("[dim]Загрузка документов...[/dim]")
+    documents = load_documents()
+    dataset = load_dataset()
+
+    active_cfg = EMBEDDING_MODELS[settings.active_embedding_model]
+    active_embedding_configs = {settings.active_embedding_model: active_cfg}
+
+    pairs = [(cs, ov) for cs in chunk_sizes for ov in overlaps]
+    console.print(
+        f"[bold]Проверка {len(pairs)} конфигураций чанкинга "
+        f"(ретривер: {retriever_name})[/bold]\n"
+    )
+
+    results: list[dict] = []
+
+    for chunk_size, overlap in pairs:
+        label = f"cs={chunk_size}, co={overlap}"
+        console.print(f"[bold cyan]▶ {label}[/bold cyan]")
+
+        nodes = parse_nodes_with_config(documents, chunk_size, overlap)
+        console.print(f"  Узлов: {len(nodes)}")
+
+        if is_sparse:
+            indexes: dict = {}
+        else:
+            try:
+                indexes = load_indexes_for_chunking(chunk_size, overlap, active_cfg)
+            except RuntimeError as e:
+                console.print(f"[red]  Индекс не найден: {e}[/red]")
+                console.print(
+                    "[yellow]  Запустите: uv run scripts/build_chunking_indexes.py[/yellow]"
+                )
+                continue
+
+        LlamaSettings.chunk_size = chunk_size
+        LlamaSettings.chunk_overlap = overlap
+
+        retriever_configs = build_retrievers(
+            indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
+        )
+        config = find_by_name(retriever_configs, retriever_name, "Ретривер")
+
+        per_question, total_time = evaluate_dataset(
+            retrieve_fn=lambda q, c=config: c.retrieve(query=q, top_k=top_k),
+            dataset=dataset,
+        )
+        result = {
+            "chunk_size": chunk_size,
+            "overlap": overlap,
+            "nodes_count": len(nodes),
+            "retriever": retriever_name,
+            **aggregate_retrieval_metrics(per_question, total_time),
+        }
+        results.append(result)
+        console.print(format_retrieval_summary(result) + "\n")
+
+    if results:
+        _print_chunking_table(results, top_k, retriever_name)
+
+    if save and results:
+        save_results(results, RESULTS_DIR / "chunking")
+
+
+@app.command()
+def threshold(
+    thresholds: list[float] = typer.Option(
+        [0.0, 0.1, 0.2, 0.3, 0.4, 0.5],
+        "--threshold",
+        "-t",
+        help="Пороги оценки релевантности",
+    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Количество кандидатов"),
+    retriever_name: str = typer.Option(
+        "vector/bge",
+        "--retriever",
+        "-r",
+        help=(
+            "Ретривер для оценки."
+        ),
+    ),
+    save: bool = typer.Option(
+        False, "--save", help="Сохранить детальные результаты в JSON"
+    ),
+) -> None:
+    """
+    Поиск оптимального порога релевантности.
+    """
+
+    indexes, nodes, dataset = prepare_experiment()
+
+    active_embedding_configs = {
+        settings.active_embedding_model: EMBEDDING_MODELS[
+            settings.active_embedding_model
+        ]
+    }
+    retriever_configs = build_retrievers(
+        indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
+    )
+    base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
+    console.print(f"[green]Ретривер: {base_retriever.name}[/green]")
+    console.print(f"[bold]Проверка {len(thresholds)} порогов...[/bold]\n")
+
+    results: list[dict] = []
+
+    for thr in sorted(thresholds):
+
+        def _retrieve(
+            query: str,
+            _thr: float = thr,
+        ) -> list[NodeWithScore]:
+            candidates = base_retriever.retrieve(query=query, top_k=top_k)
+            return [n for n in candidates if n.score is not None and n.score >= _thr]
+
+        per_question, total_time = evaluate_dataset(
+            retrieve_fn=_retrieve,
+            dataset=dataset,
+        )
+
+        valid = [q for q in per_question if "error" not in q]
+        avg_results = (
+            sum(len(q["relevances"]) for q in valid) / len(valid) if valid else 0.0
+        )
+
+        result = {
+            "threshold": thr,
+            "avg_results": round(avg_results, 2),
+            "retriever": retriever_name,
+            **aggregate_retrieval_metrics(per_question, total_time),
+        }
+        results.append(result)
+        console.print(
+            f"  thr={thr:.2f}  avg_results={avg_results:.1f}  "
+            + format_retrieval_summary(result).strip()
+            + "\n"
+        )
+
+    _print_threshold_table(results, retriever_name)
+
+    if save:
+        save_results(results, RESULTS_DIR / "threshold")
 
 
 if __name__ == "__main__":
