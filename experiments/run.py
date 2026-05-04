@@ -691,9 +691,7 @@ def threshold(
         "vector/bge",
         "--retriever",
         "-r",
-        help=(
-            "Ретривер для оценки."
-        ),
+        help=("Ретривер для оценки."),
     ),
     save: bool = typer.Option(
         False, "--save", help="Сохранить детальные результаты в JSON"
