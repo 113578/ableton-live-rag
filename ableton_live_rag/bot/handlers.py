@@ -2,32 +2,41 @@
 Обработчики команд и сообщений Telegram-бота.
 """
 
+import logging
 import time
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes
 
 from ableton_live_rag.bot.client import RAGClient
-from ableton_live_rag.config import get_logger
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 _WELCOME = (
-    "Hi! I can help you navigate the Ableton ecosystem documentation.\n\n"
-    "Just ask a question — I'll find the answer in the Live 12, Push 3, "
-    "and Making Music guides.\n\n"
-    "Commands:\n"
-    "/new — start a new conversation (clear history)\n"
-    "/help — show this message"
+    "👋 Hey! I'm your Ableton assistant.\n\n"
+    "🎛 Ask me anything about *Live 12*, *Push 3*, or *Making Music* "
+    "and I'll find the answer straight from the official documentation.\n\n"
+    "💬 I remember the conversation, so feel free to follow up and dig deeper.\n\n"
+    "⚡️ *Commands*\n"
+    "/start — show start message\n"
+    "/help — show help message"
 )
 
 _HELP = (
-    "Ask anything about the Ableton ecosystem.\n\n"
-    "I keep track of the conversation context, so you can follow up and ask for clarifications.\n\n"
-    "/new — clear history and start over\n"
-    "/help — this message"
+    "🎹 *Ableton Assistant — Help*\n\n"
+    "Just send a question in plain text and I'll search the docs for you.\n\n"
+    "📖 *Sources covered*\n"
+    "• Ableton Live 12 Reference Manual\n"
+    "• Push 3 Manual\n"
+    "• Making Music by Dennis DeSantis\n\n"
+    "🧠 *Context*\n"
+    "I keep track of the conversation — you can ask follow-up questions "
+    "without repeating yourself.\n\n"
+    "⚡️ *Commands*\n"
+    "/start — show start message\n"
+    "/help — show help message"
 )
 
 _MIN_EDIT_INTERVAL = 1.2
@@ -69,6 +78,18 @@ def _format_sources(sources: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _sources_shown_keyboard(msg_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("🙈 Hide sources", callback_data=f"src:hide:{msg_id}")]]
+    )
+
+
+def _sources_hidden_keyboard(msg_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [[InlineKeyboardButton("📚 Sources", callback_data=f"src:show:{msg_id}")]]
+    )
+
+
 def _split_text(text: str, limit: int = _MAX_MESSAGE_LEN) -> list[str]:
     if len(text) <= limit:
         return [text]
@@ -82,46 +103,101 @@ def _split_text(text: str, limit: int = _MAX_MESSAGE_LEN) -> list[str]:
     return chunks
 
 
-async def _safe_edit(msg, text: str, parse_mode: str | None = None) -> None:
+async def _safe_edit(
+    msg,
+    text: str,
+    parse_mode: str | None = None,
+    reply_markup: InlineKeyboardMarkup | None = None,
+) -> None:
     try:
-        await msg.edit_text(text, parse_mode=parse_mode)
-
+        await msg.edit_text(text, parse_mode=parse_mode, reply_markup=reply_markup)
     except BadRequest as e:
         if "Message is not modified" in str(e):
             return
-
         if parse_mode:
-            await msg.edit_text(text)
+            await msg.edit_text(text, reply_markup=reply_markup)
         else:
             raise
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(_WELCOME)
+    """
+    Отправляет приветственное сообщение в ответ на команду /start.
+
+    Parameters
+    ----------
+    update : Update
+        Входящее обновление от Telegram.
+    context : ContextTypes.DEFAULT_TYPE
+        Контекст обработчика.
+    """
+    await update.message.reply_text(_WELCOME, parse_mode=ParseMode.MARKDOWN)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text(_HELP)
+    """
+    Отправляет справочное сообщение в ответ на команду /help.
+
+    Parameters
+    ----------
+    update : Update
+        Входящее обновление от Telegram.
+    context : ContextTypes.DEFAULT_TYPE
+        Контекст обработчика.
+    """
+    await update.message.reply_text(_HELP, parse_mode=ParseMode.MARKDOWN)
 
 
-async def new_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    client: RAGClient = context.bot_data["client"]
-    session_id: str | None = context.user_data.get("session_id")
+async def sources_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Переключает видимость источников по нажатию на inline-кнопку.
 
-    if session_id:
-        logger.info("User %s reset session %s", update.effective_user.id, session_id)
+    Parameters
+    ----------
+    update : Update
+        Входящее обновление с callback-запросом (``src:show:<id>`` или ``src:hide:<id>``).
+    context : ContextTypes.DEFAULT_TYPE
+        Контекст обработчика; кеш источников хранится в ``context.user_data``.
+    """
+    query = update.callback_query
+    await query.answer()
 
-        try:
-            await client.delete_session(session_id)
-        except Exception:
-            pass
+    _, action, msg_id = query.data.split(":", 2)
+    cache: dict = context.user_data.get("sources_cache", {}).get(msg_id)
 
-        context.user_data["session_id"] = None
+    if not cache:
+        await query.answer("Sources are no longer available.", show_alert=True)
+        return
 
-    await update.message.reply_text("Starting a new conversation. Go ahead and ask!")
+    if action == "show":
+        full = cache["answer"].rstrip() + "\n\n" + cache["sources"]
+
+        await _safe_edit(
+            query.message,
+            full,
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=_sources_shown_keyboard(msg_id),
+        )
+    else:
+        await _safe_edit(
+            query.message,
+            cache["answer"],
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=_sources_hidden_keyboard(msg_id),
+        )
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """
+    Стримит RAG-ответ на входящее сообщение пользователя и отображает источники.
+
+    Parameters
+    ----------
+    update : Update
+        Входящее обновление с текстовым сообщением пользователя.
+    context : ContextTypes.DEFAULT_TYPE
+        Контекст обработчика; ``session_id`` сохраняется в ``context.user_data``.
+    """
     client: RAGClient = context.bot_data["client"]
     session_id: str | None = context.user_data.get("session_id")
     user_text = update.message.text or ""
@@ -134,7 +210,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     )
 
     await update.message.chat.send_action(ChatAction.TYPING)
-
     msg = await update.message.reply_text("⏳")
 
     text = ""
@@ -156,23 +231,32 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                         if len(text) <= _MAX_MESSAGE_LEN
                         else text[-_MAX_MESSAGE_LEN:]
                     )
-
                     await _safe_edit(msg, display)
-
                     last_edit = now
 
             elif event_type == "sources":
                 sources = content
 
         sources_block = _format_sources(sources)
-        full = text
+        msg_id = str(msg.message_id)
 
         if sources_block:
-            full = full.rstrip() + "\n\n" + sources_block
+            context.user_data.setdefault("sources_cache", {})[msg_id] = {
+                "answer": text,
+                "sources": sources_block,
+            }
+            keyboard = _sources_hidden_keyboard(msg_id)
+        else:
+            keyboard = None
 
-        chunks = _split_text(full)
+        chunks = _split_text(text)
 
-        await _safe_edit(msg, chunks[0], parse_mode=ParseMode.MARKDOWN)
+        await _safe_edit(
+            msg,
+            chunks[0],
+            parse_mode=ParseMode.MARKDOWN,
+            reply_markup=keyboard,
+        )
 
         for chunk in chunks[1:]:
             await update.message.reply_text(chunk, parse_mode=ParseMode.MARKDOWN)
@@ -181,5 +265,4 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         logger.exception(
             "Error handling message from user %s", update.effective_user.id
         )
-
         await _safe_edit(msg, "Failed to get a response. Please try again.")

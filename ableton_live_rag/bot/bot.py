@@ -2,13 +2,19 @@
 Точка входа Telegram-бота.
 """
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
 from ableton_live_rag.bot.client import RAGClient
 from ableton_live_rag.bot.handlers import (
     handle_message,
     help_command,
-    new_command,
+    sources_callback,
     start_command,
 )
 from ableton_live_rag.config import get_logger
@@ -38,7 +44,9 @@ def build_app(token: str, api_base_url: str) -> Application:
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("new", new_command))
+    app.add_handler(
+        CallbackQueryHandler(sources_callback, pattern=r"^src:(show|hide):")
+    )
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     return app
