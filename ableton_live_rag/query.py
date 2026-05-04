@@ -21,10 +21,8 @@ from llama_index.core.response_synthesizers import (
 )
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
-from llama_index.core.retrievers import QueryFusionRetriever, VectorIndexRetriever
-from llama_index.core.retrievers.fusion_retriever import FUSION_MODES
+from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.storage.chat_store.redis import RedisChatStore
 from redisvl.extensions.cache.llm import SemanticCache
 from redisvl.utils.vectorize import HFTextVectorizer
@@ -138,35 +136,20 @@ class StreamingAnswer:
     response_gen: AsyncGenerator[str, None]
 
 
-def _load_bge_index() -> tuple[VectorStoreIndex, list]:
+def _load_bge_index() -> VectorStoreIndex:
     LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
         model_name=_EMBEDDING_CONFIG.model_id,
         query_instruction=_EMBEDDING_CONFIG.query_instruction,
         text_instruction=_EMBEDDING_CONFIG.text_instruction,
     )
 
-    collection = _EMBEDDING_CONFIG.collection_name
-    index = idx.load_index(collection_name=collection)
-    nodes = idx.get_all_nodes(collection_name=collection)
-
-    return index, nodes
+    return idx.load_index(collection_name=_EMBEDDING_CONFIG.collection_name)
 
 
-def _build_hybrid_retriever(
-    index: VectorStoreIndex, nodes: list, similarity_top_k: int
-) -> QueryFusionRetriever:
-    fetch_k = similarity_top_k * 2
-    vector_retriever = VectorIndexRetriever(index=index, similarity_top_k=fetch_k)
-    bm25_retriever = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=fetch_k)
-
-    return QueryFusionRetriever(
-        retrievers=[vector_retriever, bm25_retriever],
-        similarity_top_k=similarity_top_k,
-        num_queries=1,
-        mode=FUSION_MODES.RECIPROCAL_RANK,
-        use_async=False,
-        verbose=False,
-    )
+def _build_vector_retriever(
+    index: VectorStoreIndex, similarity_top_k: int
+) -> VectorIndexRetriever:
+    return VectorIndexRetriever(index=index, similarity_top_k=similarity_top_k)
 
 
 def _build_query_engine(
@@ -188,8 +171,8 @@ def _build_query_engine(
         Настроенный движок запросов со стримингом.
     """
 
-    index, nodes = _load_bge_index()
-    retriever = _build_hybrid_retriever(index, nodes, similarity_top_k)
+    index = _load_bge_index()
+    retriever = _build_vector_retriever(index, similarity_top_k)
     postprocessors: list[BaseNodePostprocessor] = (
         [SentenceTransformerRerank(model=_BGE_RERANKER_MODEL, top_n=similarity_top_k)]
         if rerank
@@ -308,8 +291,8 @@ async def retrieve(
 
     rewritten = await guardrails.rewrite(query)
 
-    index, corpus_nodes = _load_bge_index()
-    retriever = _build_hybrid_retriever(index, corpus_nodes, similarity_top_k)
+    index = _load_bge_index()
+    retriever = _build_vector_retriever(index, similarity_top_k)
     nodes = await asyncio.to_thread(retriever.retrieve, rewritten)
 
     return [_to_search_result(node) for node in nodes]
@@ -334,8 +317,8 @@ def create_chat_engine(
         Движок с ``ChatMemoryBuffer`` и векторным ретривером.
     """
 
-    index, nodes = _load_bge_index()
-    retriever = _build_hybrid_retriever(index, nodes, top_k)
+    index = _load_bge_index()
+    retriever = _build_vector_retriever(index, top_k)
 
     memory = ChatMemoryBuffer.from_defaults(
         token_limit=settings.context_window // 2,
