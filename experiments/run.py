@@ -12,7 +12,7 @@
     uv run experiments/run.py chunking --chunk-size 512 --overlap 64 --retriever vector/bm25
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
-    uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
+    uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6 --generator gpt-5.4
 """
 
 import asyncio
@@ -331,6 +331,9 @@ def generator(
     reranker_name: str | None = typer.Option(
         None, "--reranker", help="Имя ранжировщика (опционально)"
     ),
+    generator_names: list[str] = typer.Option(
+        [], "--generator", "-g", help="Название LLM"
+    ),
     candidate_k: int = typer.Option(
         15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
     ),
@@ -356,7 +359,7 @@ def generator(
         selected_reranker = find_by_name(reranker_configs, reranker_name, "Ранжировщик")
 
     console.print("[dim]Загрузка моделей генераторов...[/dim]")
-    generator_configs = build_generators()
+    generator_configs = build_generators(selected=generator_names or None)
     console.print(f"[green]Подготовлено {len(generator_configs)} генераторов[/green]")
 
     metrics = build_judge_metrics()
@@ -401,6 +404,9 @@ def end2end(
         "vector/bge", "--retriever", "-r", help="Ретривер"
     ),
     reranker_name: str | None = typer.Option(None, "--reranker", help="Ранжировщик"),
+    generator_names: list[str] = typer.Option(
+        [], "--generator", "-g", help="Название LLM"
+    ),
     candidate_k: int = typer.Option(
         15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
     ),
@@ -477,7 +483,7 @@ def end2end(
     console.print(f"[green]Пайплайн поиска: {pipeline_label}[/green]")
 
     console.print("[dim]Загрузка моделей генераторов...[/dim]")
-    generator_configs = build_generators()
+    generator_configs = build_generators(selected=generator_names or None)
     console.print(f"[green]Подготовлено {len(generator_configs)} генераторов[/green]")
 
     metrics = build_judge_metrics()
