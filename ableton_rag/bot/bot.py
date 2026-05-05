@@ -1,5 +1,5 @@
 """
-Точка входа Telegram-бота.
+Telegram bot entry point.
 """
 
 from telegram.ext import (
@@ -24,19 +24,19 @@ logger = get_logger(__name__)
 
 def build_app(token: str, api_base_url: str) -> Application:
     """
-    Сборка и настройка Telegram Application.
+    Build and configure the Telegram ``Application``.
 
     Parameters
     ----------
     token : str
-        Токен Telegram-бота.
+        Telegram bot token.
     api_base_url : str
-        URL FastAPI-приложения.
+        URL of the FastAPI application.
 
     Returns
     -------
     Application
-        Готовое приложение с зарегистрированными обработчиками.
+        Application with all handlers registered.
     """
 
     app = Application.builder().token(token).build()
@@ -54,14 +54,14 @@ def build_app(token: str, api_base_url: str) -> Application:
 
 def run(token: str, api_base_url: str) -> None:
     """
-    Запуск бота в режиме long polling.
+    Start the bot in long-polling mode.
 
     Parameters
     ----------
     token : str
-        Токен Telegram-бота.
+        Telegram bot token.
     api_base_url : str
-        Базовый URL FastAPI-приложения.
+        Base URL of the FastAPI application.
     """
 
     logger.info("Starting Telegram bot (API: %s)...", api_base_url)

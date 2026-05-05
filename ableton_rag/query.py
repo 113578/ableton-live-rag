@@ -1,5 +1,5 @@
 """
-Пайплайн запросов: поиск по индексу и генерация ответов.
+Query pipeline: search the index and generate answers.
 """
 
 import asyncio
@@ -22,6 +22,7 @@ from llama_index.core.response_synthesizers import (
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.core.postprocessor.types import BaseNodePostprocessor
 from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.schema import NodeWithScore
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.storage.chat_store.redis import RedisChatStore
 from redisvl.extensions.cache.llm import SemanticCache
@@ -90,24 +91,24 @@ _llmcache = SemanticCache(
 @dataclass
 class SearchResult:
     """
-    Результат поиска.
+    Search result.
 
     Attributes
     ----------
     text : str
-        Текст найденного фрагмента.
+        Text of the retrieved fragment.
     score : float
-        Оценка релевантности.
+        Relevance score.
     chapter : str
-        Название главы.
+        Chapter title.
     section : str
-        Название раздела.
+        Section title.
     subsection : str
-        Название подраздела.
+        Subsection title.
     page_start : int
-        Начальная страница (1-indexed).
+        Starting page (1-indexed).
     metadata : dict
-        Полные метаданные узла.
+        Full node metadata.
     """
 
     text: str
@@ -122,21 +123,21 @@ class SearchResult:
 @dataclass
 class StreamingAnswer:
     """
-    Ответ с поддержкой стриминга и списком источников.
+    Streaming answer with a list of sources.
 
     Attributes
     ----------
     source_nodes : list[SearchResult]
-        Найденные фрагменты документации.
+        Retrieved documentation fragments.
     response_gen : AsyncGenerator[str, None]
-        Асинхронный генератор токенов ответа LLM.
+        Asynchronous generator yielding LLM response tokens.
     """
 
     source_nodes: list[SearchResult]
     response_gen: AsyncGenerator[str, None]
 
 
-def _load_bge_index() -> VectorStoreIndex:
+def _load_active_index() -> VectorStoreIndex:
     LlamaIndexSettings.embed_model = HuggingFaceEmbedding(
         model_name=_EMBEDDING_CONFIG.model_id,
         query_instruction=_EMBEDDING_CONFIG.query_instruction,
@@ -156,22 +157,22 @@ def _build_query_engine(
     similarity_top_k: int, rerank: bool = False
 ) -> RetrieverQueryEngine:
     """
-    Создание RetrieverQueryEngine с гибридным поиском (RRF) и опциональным BGE reranker.
+    Create a ``RetrieverQueryEngine`` with hybrid search (RRF) and an optional BGE reranker.
 
     Parameters
     ----------
     similarity_top_k : int
-        Количество фрагментов для контекста.
+        Number of fragments retrieved as context.
     rerank : bool
-        Использовать ли BGE reranker в качестве постпроцессора.
+        Whether to apply the BGE reranker as a post-processor.
 
     Returns
     -------
     RetrieverQueryEngine
-        Настроенный движок запросов со стримингом.
+        Configured query engine with streaming.
     """
 
-    index = _load_bge_index()
+    index = _load_active_index()
     retriever = _build_vector_retriever(index, similarity_top_k)
     postprocessors: list[BaseNodePostprocessor] = (
         [SentenceTransformerRerank(model=_BGE_RERANKER_MODEL, top_n=similarity_top_k)]
@@ -194,19 +195,19 @@ def _build_query_engine(
 
 async def ask(question: str, top_k: int = settings.similarity_top_k) -> StreamingAnswer:
     """
-    Постановка вопроса и получение стримингового ответа с источниками.
+    Submit a question and get a streaming answer with sources.
 
     Parameters
     ----------
     question : str
-        Вопрос пользователя.
+        User question.
     top_k : int
-        Количество фрагментов документации для контекста.
+        Number of documentation fragments used as context.
 
     Returns
     -------
     StreamingAnswer
-        Объект с ``source_nodes`` и асинхронным ``response_gen``.
+        Object with ``source_nodes`` and an async ``response_gen``.
     """
 
     guard_result = await guardrails.guard(question)
@@ -269,19 +270,19 @@ async def retrieve(
     query: str, similarity_top_k: int = settings.similarity_top_k
 ) -> list[SearchResult]:
     """
-    Выполнение векторного поиска без генерации ответа.
+    Run vector search without generating an answer.
 
     Parameters
     ----------
     query : str
-        Поисковый запрос.
+        Search query.
     similarity_top_k : int
-        Количество результатов.
+        Number of results.
 
     Returns
     -------
     list[SearchResult]
-        Список результатов, отсортированный по убыванию релевантности.
+        Results sorted by descending relevance.
     """
 
     guard_result = await guardrails.guard(query)
@@ -291,7 +292,7 @@ async def retrieve(
 
     rewritten = await guardrails.rewrite(query)
 
-    index = _load_bge_index()
+    index = _load_active_index()
     retriever = _build_vector_retriever(index, similarity_top_k)
     nodes = await asyncio.to_thread(retriever.retrieve, rewritten)
 
@@ -302,22 +303,22 @@ def create_chat_engine(
     session_id: str, top_k: int = settings.similarity_top_k
 ) -> ContextChatEngine:
     """
-    Создание движка диалогового чата с памятью и поиском по документации.
+    Create a conversational chat engine with memory and documentation search.
 
     Parameters
     ----------
     session_id : str
-        Идентификатор сессии.
+        Session identifier.
     top_k : int
-        Количество фрагментов документации для контекста на каждый ход.
+        Number of documentation fragments used as context per turn.
 
     Returns
     -------
     ContextChatEngine
-        Движок с ``ChatMemoryBuffer`` и векторным ретривером.
+        Engine with ``ChatMemoryBuffer`` and a vector retriever.
     """
 
-    index = _load_bge_index()
+    index = _load_active_index()
     retriever = _build_vector_retriever(index, top_k)
 
     memory = ChatMemoryBuffer.from_defaults(
@@ -337,7 +338,7 @@ def _chat_to_search_results(response: StreamingAgentChatResponse) -> list[Search
     return [_to_search_result(node) for node in (response.source_nodes or [])]
 
 
-def _to_search_result(node) -> SearchResult:
+def _to_search_result(node: NodeWithScore) -> SearchResult:
     return SearchResult(
         text=node.text,
         score=node.score or 0.0,

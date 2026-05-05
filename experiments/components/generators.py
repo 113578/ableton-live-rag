@@ -1,5 +1,5 @@
 """
-Конфигурации генераторов для экспериментов.
+Generator configurations for experiments.
 """
 
 import os
@@ -41,20 +41,20 @@ _PROMPT = RichPromptTemplate(
 @dataclass(frozen=True)
 class GeneratorSpec:
     """
-    Спецификация генератора.
+    Generator specification.
 
     Attributes
     ----------
     name : str
-        Название генератора.
+        Generator name.
     backend : str
-        Бэкенд: ``ollama``, ``openai`` или ``openai_like``.
+        Backend: ``ollama``, ``openai`` or ``openai_like``.
     model_id : str
-        Идентификатор модели.
+        Model identifier.
     api_base : str
-        URL API.
+        API URL.
     api_key : str
-        Ключ API.
+        API key.
     """
 
     name: str
@@ -67,14 +67,14 @@ class GeneratorSpec:
 @dataclass
 class GeneratorConfig:
     """
-    Обёртка над генератором с единым интерфейсом для оценки.
+    Wrapper around a generator exposing a unified interface for evaluation.
 
     Attributes
     ----------
     name : str
-        Название генератора.
+        Generator name.
     description : str
-        Описание генератора.
+        Generator description.
     """
 
     name: str
@@ -84,38 +84,38 @@ class GeneratorConfig:
 
     def generate(self, question: str, contexts: list[str]) -> str:
         """
-        Синхронная генерация ответа.
+        Generate an answer synchronously.
 
         Parameters
         ----------
         question : str
-            Вопрос пользователя.
+            User question.
         contexts : list[str]
-            Фрагменты документации.
+            Documentation fragments.
 
         Returns
         -------
         str
-            Ответ генератора.
+            Generator response.
         """
 
         return self._generate_fn(question, contexts)
 
     async def agenerate(self, question: str, contexts: list[str]) -> str:
         """
-        Асинхронная генерация ответа.
+        Generate an answer asynchronously.
 
         Parameters
         ----------
         question : str
-            Вопрос пользователя.
+            User question.
         contexts : list[str]
-            Фрагменты документации.
+            Documentation fragments.
 
         Returns
         -------
         str
-            Ответ генератора.
+            Generator response.
         """
 
         return await self._agenerate_fn(question, contexts)
@@ -168,31 +168,31 @@ GENERATOR_SPECS: list[GeneratorSpec] = _load_generator_specs()
 
 def load_judge_spec() -> GeneratorSpec:
     """
-    Загрузка спецификации судьи DeepEval из переменной ``JUDGE_MODEL``.
+    Load the DeepEval judge specification from the ``JUDGE_MODEL`` env var.
 
     Returns
     -------
     GeneratorSpec
-        Спецификация судьи.
+        Judge specification.
 
     Raises
     ------
     RuntimeError
-        Если ``JUDGE_MODEL`` не задан или не найден среди генераторов.
+        If ``JUDGE_MODEL`` is unset or does not match any generator.
     """
 
     requested = os.environ.get("JUDGE_MODEL", "").strip()
 
     if not requested:
-        raise RuntimeError("JUDGE_MODEL не задан в .env.")
+        raise RuntimeError("JUDGE_MODEL is not set in .env.")
 
     spec = next((s for s in GENERATOR_SPECS if s.name == requested), None)
 
     if spec is None:
         available = [s.name for s in GENERATOR_SPECS]
         raise RuntimeError(
-            f"JUDGE_MODEL={requested!r} не найден среди генераторов. "
-            f"Доступные: {available}"
+            f"JUDGE_MODEL={requested!r} was not found among generators. "
+            f"Available: {available}"
         )
 
     return GeneratorSpec(
@@ -206,17 +206,17 @@ def load_judge_spec() -> GeneratorSpec:
 
 def make_llm(spec: GeneratorSpec) -> LLM:
     """
-    Создание LlamaIndex LLM по спецификации.
+    Build a LlamaIndex ``LLM`` from a specification.
 
     Parameters
     ----------
     spec : GeneratorSpec
-        Спецификация генератора.
+        Generator specification.
 
     Returns
     -------
     LLM
-        LlamaIndex LLM одного из трёх бэкендов.
+        LlamaIndex LLM for one of the three backends.
     """
 
     if spec.backend == "ollama":
@@ -251,7 +251,7 @@ def make_llm(spec: GeneratorSpec) -> LLM:
             timeout=settings.request_timeout,
         )
 
-    raise ValueError(f"Неизвестный бэкенд: {spec.backend!r}")
+    raise ValueError(f"Unknown backend: {spec.backend!r}")
 
 
 def _format_context(contexts: list[str]) -> str:
@@ -285,17 +285,17 @@ def build_generators(
     selected: list[str] | None = None,
 ) -> list[GeneratorConfig]:
     """
-    Создание конфигураций генераторов для эксперимента.
+    Create generator configurations for an experiment.
 
     Parameters
     ----------
     selected : list[str] or None, optional
-        Имена спецификаций для загрузки. ``None`` — все доступные.
+        Specification names to load. ``None`` loads all available specs.
 
     Returns
     -------
     list[GeneratorConfig]
-        Список конфигураций генераторов.
+        List of generator configurations.
     """
 
     specs = (
@@ -305,6 +305,6 @@ def build_generators(
     )
 
     if not specs:
-        raise RuntimeError("Нет доступных генераторов. Проверьте experiments/.env.")
+        raise RuntimeError("No generators available. Check experiments/.env.")
 
     return [_make_generator(spec=s) for s in specs]

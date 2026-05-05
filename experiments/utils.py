@@ -1,5 +1,5 @@
 """
-Общие утилиты для экспериментов.
+Shared utilities for experiments.
 """
 
 import asyncio
@@ -61,21 +61,21 @@ console = Console()
 
 def load_dataset(path: Path = DATASET_PATH) -> list[dict]:
     """
-    Загрузка валидационного набора данных.
+    Load a validation dataset.
 
     Parameters
     ----------
     path : Path
-        Путь к JSON-файлу с вопросами.
+        Path to the JSON file containing questions.
 
     Returns
     -------
     list[dict]
-        Список вопросов с полями ``id``, ``question``, ``source``,
-        ``ground_truth_pages``, ``category``.
+        List of questions with the fields ``id``, ``question``, ``source``,
+        ``ground_truth_pages`` and ``category``.
     """
 
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -83,24 +83,24 @@ def load_indexes(
     models: dict | None = None,
 ) -> dict[str, VectorStoreIndex]:
     """
-    Загрузка Qdrant-индексов для выбранных моделей эмбеддингов.
+    Load Qdrant indexes for the selected embedding models.
 
     Parameters
     ----------
     models : dict[str, EmbeddingModelConfig] or None, optional
-        Модели, для которых нужно загрузить индексы. По умолчанию все.
+        Models for which to load indexes. Defaults to all models.
 
     Returns
     -------
     dict[str, VectorStoreIndex]
-        Индексы по имени модели.
+        Indexes keyed by model name.
     """
 
     models = models or EMBEDDING_MODELS
     indexes: dict[str, VectorStoreIndex] = {}
 
     for key, emb in models.items():
-        console.print(f"[dim]  Загрузка индекса {emb.collection_name}...[/dim]")
+        console.print(f"[dim]  Loading index {emb.collection_name}...[/dim]")
         LlamaSettings.embed_model = make_embed_model(emb)
         indexes[key] = load_index(collection_name=emb.collection_name)
 
@@ -113,21 +113,21 @@ def chunking_collection_name(
     overlap: int,
 ) -> str:
     """
-    Имя коллекции Qdrant для настройки параметров чанкинга.
+    Build the Qdrant collection name for a chunking parameter set.
 
     Parameters
     ----------
     emb : EmbeddingModelConfig
-        Конфигурация модели эмбеддингов.
+        Embedding-model configuration.
     chunk_size : int
-        Размер чанка в токенах.
+        Chunk size in tokens.
     overlap : int
-        Перекрытие чанков в токенах.
+        Chunk overlap in tokens.
 
     Returns
     -------
     str
-        Имя коллекции вида ``{base}_cs{chunk_size}_co{overlap}``.
+        Collection name of the form ``{base}_cs{chunk_size}_co{overlap}``.
     """
 
     return f"{emb.collection_name}_cs{chunk_size}_co{overlap}"
@@ -139,33 +139,33 @@ def load_indexes_for_chunking(
     embedding_cfg: EmbeddingModelConfig,
 ) -> dict[str, VectorStoreIndex]:
     """
-    Загрузка Qdrant-индексов для настройки параметров чанкинга.
+    Load Qdrant indexes for a particular chunking configuration.
 
     Parameters
     ----------
     chunk_size : int
-        Размер чанка в токенах.
+        Chunk size in tokens.
     overlap : int
-        Перекрытие чанков в токенах.
-    models : dict[str, EmbeddingModelConfig] or None, optional
-        Модели эмбеддингов.
+        Chunk overlap in tokens.
+    embedding_cfg : EmbeddingModelConfig
+        Embedding-model configuration.
 
     Returns
     -------
     dict[str, VectorStoreIndex]
-        Индексы по имени модели.
+        Indexes keyed by model name.
 
     Raises
     ------
     RuntimeError
-        Если коллекция не найдена — нужно запустить ``build_chunking_indexes.py``.
+        If the collection is missing — run ``build_chunking_indexes.py`` first.
     """
 
     indexes: dict[str, VectorStoreIndex] = {}
 
     cname = chunking_collection_name(embedding_cfg, chunk_size, overlap)
 
-    console.print(f"[dim]  Загрузка индекса {cname}...[/dim]")
+    console.print(f"[dim]  Loading index {cname}...[/dim]")
 
     LlamaSettings.embed_model = make_embed_model(embedding_cfg)
     indexes[embedding_cfg.name] = load_index(collection_name=cname)
@@ -179,21 +179,21 @@ def parse_nodes_with_config(
     overlap: int,
 ) -> list[BaseNode]:
     """
-    Разбивка документов на чанки с заданными параметрами.
+    Split documents into chunks using the given parameters.
 
     Parameters
     ----------
     documents : list[Document]
-        Список документов.
+        List of documents.
     chunk_size : int
-        Максимальный размер чанка в токенах.
+        Maximum chunk size in tokens.
     overlap : int
-        Перекрытие чанков в токенах.
+        Chunk overlap in tokens.
 
     Returns
     -------
     list[BaseNode]
-        Список чанков.
+        List of chunks.
     """
 
     parser = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=overlap)
@@ -205,62 +205,64 @@ def prepare_experiment() -> tuple[
     dict[str, VectorStoreIndex], list[BaseNode], list[dict]
 ]:
     """
-    Подготовка окружения для эксперимента.
+    Prepare the environment for an experiment.
 
-    Настраивает LlamaSettings, загружает индексы, парсит узлы
-    и загружает валидационный набор данных.
+    Configures ``LlamaSettings``, loads indexes, parses nodes
+    and loads the validation dataset.
 
     Returns
     -------
     tuple[dict[str, VectorStoreIndex], list[BaseNode], list[dict]]
-        Индексы, узлы и набор данных.
+        Indexes, nodes and dataset.
     """
 
     LlamaSettings.chunk_size = settings.chunk_size
     LlamaSettings.chunk_overlap = settings.chunk_overlap
 
-    console.print("[dim]Загрузка индексов из Qdrant...[/dim]")
+    console.print("[dim]Loading indexes from Qdrant...[/dim]")
     indexes = load_indexes()
 
-    console.print("[dim]Парсинг документов в узлы...[/dim]")
+    console.print("[dim]Parsing documents into nodes...[/dim]")
     documents = load_documents()
     nodes = parse_nodes(documents=documents)
-    console.print(f"[green]Получено {len(nodes)} узлов[/green]")
+    console.print(f"[green]Got {len(nodes)} nodes[/green]")
 
     dataset = load_dataset()
-    console.print(f"[green]Загружено {len(dataset)} вопросов из eval-датасета[/green]")
+    console.print(
+        f"[green]Loaded {len(dataset)} questions from the eval dataset[/green]"
+    )
 
     return indexes, nodes, dataset
 
 
 def find_by_name(configs: list, name: str, kind: str):
     """
-    Поиск конфигурации по имени.
+    Look up a configuration by name.
 
     Parameters
     ----------
     configs : list
-        Список конфигураций (ретриверов, ранжировщиков, генераторов).
+        List of configurations (retrievers, rerankers, generators).
     name : str
-        Искомое имя.
+        Name to find.
     kind : str
-        Тип конфигурации для сообщения об ошибке.
+        Configuration kind, used in the error message.
 
     Returns
     -------
-    Конфигурация с совпадающим именем.
+    Configuration with the matching name.
 
     Raises
     ------
     typer.Exit
-        Если конфигурация не найдена.
+        If no matching configuration is found.
     """
 
     found = next((c for c in configs if c.name == name), None)
 
     if found is None:
         available = [c.name for c in configs]
-        console.print(f"[red]{kind} {name!r} не найден. Доступные: {available}[/red]")
+        console.print(f"[red]{kind} {name!r} not found. Available: {available}[/red]")
         raise typer.Exit(1)
 
     return found
@@ -273,23 +275,23 @@ def build_retrieval_pipeline(
     candidate_k: int,
 ) -> Callable[[str], list[NodeWithScore]]:
     """
-    Сборка retrieval-пайплайна: ретривер [+ ранжировщик] → top_k узлов.
+    Build a retrieval pipeline: retriever [+ reranker] → top_k nodes.
 
     Parameters
     ----------
     retriever : RetrieverConfig
-        Базовый ретривер.
+        Base retriever.
     reranker : RerankerConfig or None
-        Ранжировщик. ``None`` — без переранжирования.
+        Reranker. ``None`` disables reranking.
     top_k : int
-        Количество финальных результатов.
+        Number of final results.
     candidate_k : int
-        Размер пула кандидатов для ранжировщика.
+        Candidate-pool size for the reranker.
 
     Returns
     -------
     Callable[[str], list[NodeWithScore]]
-        Функция поиска.
+        Retrieval function.
     """
 
     pool = candidate_k if reranker is not None else top_k
@@ -310,19 +312,19 @@ def evaluate_dataset(
     dataset: list[dict],
 ) -> tuple[list[dict], float]:
     """
-    Оценка функции поиска на наборе данных.
+    Evaluate a retrieval function on the dataset.
 
     Parameters
     ----------
     retrieve_fn : Callable[[str], list[NodeWithScore]]
-        Функция поиска: принимает запрос, возвращает узлы.
+        Retrieval function: takes a query, returns nodes.
     dataset : list[dict]
-        Валидационный набор данных.
+        Validation dataset.
 
     Returns
     -------
     tuple[list[dict], float]
-        Результаты по каждому вопросу и суммарное время.
+        Per-question results and total elapsed time.
     """
 
     per_question: list[dict] = []
@@ -334,7 +336,7 @@ def evaluate_dataset(
         try:
             nodes = retrieve_fn(item["question"])
         except Exception as e:
-            console.print(f"[red]  Ошибка на '{item['id']}': {e}[/red]")
+            console.print(f"[red]  Error on '{item['id']}': {e}[/red]")
             per_question.append({"id": item["id"], "error": str(e), "relevances": []})
             continue
 
@@ -379,19 +381,19 @@ def evaluate_dataset(
 
 def aggregate_retrieval_metrics(per_question: list[dict], total_time: float) -> dict:
     """
-    Агрегация метрик по результатам оценки поиска.
+    Aggregate retrieval metrics from per-question results.
 
     Parameters
     ----------
     per_question : list[dict]
-        Результаты по каждому вопросу от ``evaluate_dataset()``.
+        Per-question results from ``evaluate_dataset()``.
     total_time : float
-        Суммарное время выполнения.
+        Total elapsed time.
 
     Returns
     -------
     dict
-        Словарь с метриками и ``details``.
+        Dictionary with metrics and a ``details`` field.
     """
 
     valid = [q for q in per_question if "error" not in q]
@@ -419,17 +421,17 @@ def aggregate_retrieval_metrics(per_question: list[dict], total_time: float) -> 
 
 def format_retrieval_summary(result: dict) -> str:
     """
-    Форматирование однострочной сводки результатов поиска.
+    Format a one-line summary of retrieval results.
 
     Parameters
     ----------
     result : dict
-        Результат от ``aggregate_retrieval_metrics()``.
+        Result from ``aggregate_retrieval_metrics()``.
 
     Returns
     -------
     str
-        Строка вида ``Hit Rate=0.xxx  MRR=0.xxx  NDCG=0.xxx  (0.xxxs/query)``.
+        String of the form ``Hit Rate=0.xxx  MRR=0.xxx  NDCG=0.xxx  (0.xxxs/query)``.
     """
 
     return (
@@ -442,17 +444,17 @@ def format_retrieval_summary(result: dict) -> str:
 
 def col_header(key: str) -> str:
     """
-    Преобразование ключа метрики в заголовок колонки таблицы.
+    Convert a metric key into a table column header.
 
     Parameters
     ----------
     key : str
-        Ключ метрики.
+        Metric key.
 
     Returns
     -------
     str
-        Заголовок.
+        Header.
     """
 
     return key.replace("_", " ").title()
@@ -460,17 +462,17 @@ def col_header(key: str) -> str:
 
 def format_generator_summary(result: dict) -> str:
     """
-    Форматирование однострочной сводки результатов генерации.
+    Format a one-line summary of generator results.
 
     Parameters
     ----------
     result : dict
-        Результат с метриками генерации.
+        Result with generator metrics.
 
     Returns
     -------
     str
-        Строка вида ``Metric1=0.xxx  Metric2=0.xxx  (0.xxxs/query)``.
+        String of the form ``Metric1=0.xxx  Metric2=0.xxx  (0.xxxs/query)``.
     """
 
     score_keys = [k for k in result if k not in GENERATOR_META_KEYS]
@@ -487,25 +489,25 @@ async def evaluate_generator(
     concurrency: int = 16,
 ) -> dict:
     """
-    Сквозная оценка генератора на наборе данных.
+    End-to-end evaluation of a generator on the dataset.
 
     Parameters
     ----------
     generator : GeneratorConfig
-        Генератор ответов.
+        Answer generator.
     retrieve_fn : Callable[[str], list[NodeWithScore]]
-        Функция поиска контекста.
+        Function used to retrieve context.
     metrics : dict[str, BaseMetric]
-        Метрики DeepEval.
+        DeepEval metrics.
     dataset : list[dict]
-        Валидационный набор данных.
+        Validation dataset.
     concurrency : int
-        Число параллельных запросов.
+        Number of parallel requests.
 
     Returns
     -------
     dict
-        Агрегированные метрики и ``details`` по вопросам.
+        Aggregated metrics with per-question ``details``.
     """
 
     semaphore = asyncio.Semaphore(concurrency)
@@ -531,7 +533,7 @@ async def evaluate_generator(
                 return {"id": item["id"], "latency_s": round(latency, 3), **scores}
 
             except Exception as e:
-                console.print(f"[red]  Ошибка на '{item['id']}': {e}[/red]")
+                console.print(f"[red]  Error on '{item['id']}': {e}[/red]")
 
                 return {"id": item["id"], "error": str(e)}
 
@@ -560,17 +562,17 @@ async def evaluate_generator(
 
 def build_judge_metrics() -> dict[str, BaseMetric]:
     """
-    Инициализация судьи DeepEval и набора метрик генерации.
+    Initialize the DeepEval judge and the set of generation metrics.
 
     Returns
     -------
     dict[str, BaseMetric]
-        Метрики DeepEval, готовые к использованию.
+        DeepEval metrics, ready to use.
     """
 
     judge_spec = load_judge_spec()
     console.print(
-        f"[dim]Инициализация судьи DeepEval "
+        f"[dim]Initializing DeepEval judge "
         f"({judge_spec.backend}/{judge_spec.model_id})...[/dim]"
     )
     judge = LlamaIndexJudge(llm=make_llm(judge_spec), name=judge_spec.name)
@@ -580,28 +582,28 @@ def build_judge_metrics() -> dict[str, BaseMetric]:
 
 def save_results(results: list[dict] | dict, results_dir: Path) -> Path:
     """
-    Сохранение результатов в JSON.
+    Save results as JSON.
 
     Parameters
     ----------
     results : list[dict] or dict
-        Результаты экспериментов.
+        Experiment results.
     results_dir : Path
-        Директория для сохранения.
+        Output directory.
 
     Returns
     -------
     Path
-        Путь к сохранённому файлу.
+        Path to the saved file.
     """
 
     results_dir.mkdir(parents=True, exist_ok=True)
 
     json_path = results_dir / f"eval_{time.strftime('%Y%m%d_%H%M%S')}.json"
 
-    with open(json_path, "w") as f:
+    with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
-    console.print(f"[green]Результаты сохранены: {json_path}[/green]")
+    console.print(f"[green]Results saved: {json_path}[/green]")
 
     return json_path

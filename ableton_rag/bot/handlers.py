@@ -1,5 +1,5 @@
 """
-Обработчики команд и сообщений Telegram-бота.
+Telegram bot command and message handlers.
 """
 
 import logging
@@ -122,45 +122,44 @@ async def _safe_edit(
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Отправляет приветственное сообщение в ответ на команду /start.
+    Send the welcome message in response to the ``/start`` command.
 
     Parameters
     ----------
     update : Update
-        Входящее обновление от Telegram.
+        Incoming update from Telegram.
     context : ContextTypes.DEFAULT_TYPE
-        Контекст обработчика.
+        Handler context.
     """
     await update.message.reply_text(_WELCOME, parse_mode=ParseMode.MARKDOWN)
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Отправляет справочное сообщение в ответ на команду /help.
+    Send the help message in response to the ``/help`` command.
 
     Parameters
     ----------
     update : Update
-        Входящее обновление от Telegram.
+        Incoming update from Telegram.
     context : ContextTypes.DEFAULT_TYPE
-        Контекст обработчика.
+        Handler context.
     """
     await update.message.reply_text(_HELP, parse_mode=ParseMode.MARKDOWN)
 
 
 async def sources_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Переключает видимость источников по нажатию на inline-кнопку.
+    Toggle source visibility when the inline button is pressed.
 
     Parameters
     ----------
     update : Update
-        Входящее обновление с callback-запросом (``src:show:<id>`` или ``src:hide:<id>``).
+        Incoming update with a callback query (``src:show:<id>`` or ``src:hide:<id>``).
     context : ContextTypes.DEFAULT_TYPE
-        Контекст обработчика; кеш источников хранится в ``context.user_data``.
+        Handler context; the source cache lives in ``context.user_data``.
     """
     query = update.callback_query
-    await query.answer()
 
     _, action, msg_id = query.data.split(":", 2)
     cache: dict = context.user_data.get("sources_cache", {}).get(msg_id)
@@ -168,6 +167,8 @@ async def sources_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if not cache:
         await query.answer("Sources are no longer available.", show_alert=True)
         return
+
+    await query.answer()
 
     if action == "show":
         full = cache["answer"].rstrip() + "\n\n" + cache["sources"]
@@ -189,14 +190,14 @@ async def sources_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """
-    Стримит RAG-ответ на входящее сообщение пользователя и отображает источники.
+    Stream the RAG answer for an incoming user message and show its sources.
 
     Parameters
     ----------
     update : Update
-        Входящее обновление с текстовым сообщением пользователя.
+        Incoming update with the user's text message.
     context : ContextTypes.DEFAULT_TYPE
-        Контекст обработчика; ``session_id`` сохраняется в ``context.user_data``.
+        Handler context; ``session_id`` is stored in ``context.user_data``.
     """
     client: RAGClient = context.bot_data["client"]
     session_id: str | None = context.user_data.get("session_id")

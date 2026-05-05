@@ -1,5 +1,5 @@
 """
-Конфигурации ретриверов для экспериментов.
+Retriever configurations for experiments.
 """
 
 from collections.abc import Callable
@@ -21,16 +21,16 @@ from ableton_rag.config import EmbeddingModelConfig
 @dataclass
 class RetrieverConfig:
     """
-    Обёртка над ретривером с единым интерфейсом для оценки.
+    Wrapper around a retriever exposing a unified interface for evaluation.
 
     Attributes
     ----------
     name : str
-        Название ретривера.
+        Retriever name.
     description : str
-        Описание ретривера.
+        Retriever description.
     category : str
-        Категория ретривера: ``sparse``, ``dense``, ``hybrid``.
+        Retriever category: ``sparse``, ``dense`` or ``hybrid``.
     """
 
     name: str
@@ -40,19 +40,19 @@ class RetrieverConfig:
 
     def retrieve(self, query: str, top_k: int = 5) -> list[NodeWithScore]:
         """
-        Запуск поиска.
+        Run the retrieval.
 
         Parameters
         ----------
         query : str
-            Поисковый запрос.
+            Search query.
         top_k : int
-            Количество результатов.
+            Number of results.
 
         Returns
         -------
         list[NodeWithScore]
-            Ранжированные узлы с оценками.
+            Ranked nodes with scores.
         """
 
         return self._retrieve_fn(query, top_k)
@@ -60,17 +60,17 @@ class RetrieverConfig:
 
 def make_embed_model(emb: EmbeddingModelConfig) -> HuggingFaceEmbedding:
     """
-    Создание HuggingFaceEmbedding из конфигурации.
+    Build a ``HuggingFaceEmbedding`` from a configuration.
 
     Parameters
     ----------
     emb : EmbeddingModelConfig
-        Конфигурация модели эмбеддингов.
+        Embedding-model configuration.
 
     Returns
     -------
     HuggingFaceEmbedding
-        Модель эмбеддингов.
+        Embedding model.
     """
 
     return HuggingFaceEmbedding(
@@ -191,21 +191,21 @@ def build_retrievers(
     embedding_configs: dict[str, EmbeddingModelConfig],
 ) -> list[RetrieverConfig]:
     """
-    Создание конфигураций ретриверов для эксперимента.
+    Create retriever configurations for an experiment.
 
     Parameters
     ----------
     indexes : dict[str, VectorStoreIndex]
-        Индексы по имени модели эмбеддингов.
+        Indexes keyed by embedding-model name.
     nodes : list[BaseNode]
-        Узлы корпуса (для sparse-ретриверов).
+        Corpus nodes (used by sparse retrievers).
     embedding_configs : dict[str, EmbeddingModelConfig]
-        Конфигурации моделей эмбеддингов.
+        Embedding-model configurations.
 
     Returns
     -------
     list[RetrieverConfig]
-        Список конфигураций ретриверов.
+        List of retriever configurations.
     """
 
     bm25 = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=5)

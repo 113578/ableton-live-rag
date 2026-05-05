@@ -1,5 +1,5 @@
 """
-Асинхронный HTTP-клиент для RAG API.
+Asynchronous HTTP client for the RAG API.
 """
 
 import json
@@ -10,12 +10,12 @@ import httpx
 
 class RAGClient:
     """
-    Клиент для взаимодействия с FastAPI-бэкендом RAG-системы.
+    Client for talking to the FastAPI backend of the RAG system.
 
     Parameters
     ----------
     base_url : str
-        Базовый URL API.
+        Base URL of the API.
     """
 
     def __init__(self, base_url: str) -> None:
@@ -28,21 +28,21 @@ class RAGClient:
         timeout: float = 120,
     ) -> AsyncIterator[tuple[str, object]]:
         """
-        Стримит SSE-события от эндпоинта /chat.
+        Stream SSE events from the ``/chat`` endpoint.
 
         Parameters
         ----------
         message : str
-            Текст сообщения пользователя.
+            Text of the user's message.
         session_id : str or None, optional
-            Идентификатор сессии для сохранения истории диалога.
+            Session identifier used to persist dialogue history.
         timeout : float, optional
-            Таймаут HTTP-соединения в секундах.
+            HTTP connection timeout in seconds.
 
         Yields
         ------
         tuple[str, object]
-            Пара ``(event_type, content)`` для каждого SSE-события.
+            Pair ``(event_type, content)`` for each SSE event.
         """
 
         async with httpx.AsyncClient(timeout=timeout) as client:

@@ -1,5 +1,5 @@
 """
-Тесты модуля metrics: релевантность, метрики ранжирования и подсчёт эталонных страниц.
+Tests for the metrics module: relevance, ranking metrics and ground-truth page counting.
 """
 
 import math

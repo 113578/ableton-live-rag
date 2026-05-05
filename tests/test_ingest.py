@@ -1,5 +1,5 @@
 """
-Тесты модуля ingest: очистка текста, свойства Section и загрузка документов.
+Tests for the ingest module: text cleaning, Section properties and document loading.
 """
 
 from pathlib import Path

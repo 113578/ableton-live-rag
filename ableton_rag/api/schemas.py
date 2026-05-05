@@ -1,5 +1,5 @@
 """
-Pydantic-схемы запросов и ответов API.
+Pydantic request and response schemas for the API.
 """
 
 from pydantic import BaseModel
@@ -7,14 +7,14 @@ from pydantic import BaseModel
 
 class AskRequest(BaseModel):
     """
-    Запрос к эндпоинту /ask.
+    Request body for the ``/ask`` endpoint.
 
     Attributes
     ----------
     question : str
-        Вопрос пользователя.
+        User question.
     top_k : int or None
-        Количество фрагментов для контекста.
+        Number of context fragments.
     """
 
     question: str
@@ -23,16 +23,16 @@ class AskRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     """
-    Запрос к эндпоинту /chat.
+    Request body for the ``/chat`` endpoint.
 
     Attributes
     ----------
     message : str
-        Сообщение пользователя.
+        User message.
     session_id : str or None
-        Идентификатор сессии. Если не указан, создаётся новая сессия.
+        Session identifier. If not provided, a new session is created.
     top_k : int or None
-        Количество фрагментов для контекста (применяется только при создании сессии).
+        Number of context fragments (applied only when creating a session).
     """
 
     message: str
@@ -42,14 +42,14 @@ class ChatRequest(BaseModel):
 
 class SearchRequest(BaseModel):
     """
-    Запрос к эндпоинту /search.
+    Request body for the ``/search`` endpoint.
 
     Attributes
     ----------
     query : str
-        Поисковый запрос.
+        Search query.
     top_k : int or None
-        Количество результатов.
+        Number of results.
     """
 
     query: str
@@ -58,24 +58,24 @@ class SearchRequest(BaseModel):
 
 class SearchResultOut(BaseModel):
     """
-    Результат поиска для JSON-ответа.
+    Search result returned in JSON responses.
 
     Attributes
     ----------
     text : str
-        Текст найденного фрагмента.
+        Text of the retrieved fragment.
     score : float
-        Оценка релевантности.
+        Relevance score.
     chapter : str
-        Название главы.
+        Chapter title.
     section : str
-        Название раздела.
+        Section title.
     subsection : str
-        Название подраздела.
+        Subsection title.
     page_start : int
-        Начальная страница (1-indexed).
+        Starting page (1-indexed).
     metadata : dict
-        Полные метаданные узла.
+        Full node metadata.
     """
 
     text: str

@@ -1,9 +1,10 @@
 """
-Загрузка и подготовка PDF-документа для индексирования.
+Loading and preparing PDF documents for indexing.
 
-Использует PyMuPDF для извлечения оглавления (TOC) и текста по страницам.
-Каждый раздел TOC становится объектом LlamaIndex Document с метаданными
-(глава, раздел, страницы), которые затем попадают в каждый чанк при индексировании.
+Uses PyMuPDF to extract the table of contents (TOC) and per-page text.
+Each TOC section becomes a LlamaIndex ``Document`` with metadata
+(chapter, section, pages), which is then attached to every chunk produced
+during indexing.
 """
 
 import re
@@ -21,20 +22,20 @@ logger = get_logger(__name__)
 @dataclass
 class Section:
     """
-    Раздел документа, полученный из оглавления.
+    Document section obtained from the table of contents.
 
     Attributes
     ----------
     title : str
-        Заголовок раздела.
+        Section title.
     level : int
-        Уровень вложенности (1 = глава, 2 = раздел, 3 = подраздел).
+        Nesting level (1 = chapter, 2 = section, 3 = subsection).
     page_start : int
-        Начальная страница.
+        First page.
     page_end : int
-        Конечная страница.
+        Last page.
     parent_titles : list[str]
-        Заголовки родительских разделов от корня к текущему.
+        Titles of the parent sections, from root to current.
     """
 
     title: str
@@ -45,7 +46,7 @@ class Section:
 
     @property
     def chapter(self) -> str:
-        """Название главы верхнего уровня."""
+        """Top-level chapter title."""
         if self.level == 1:
             return self.title
 
@@ -53,7 +54,7 @@ class Section:
 
     @property
     def section(self) -> str:
-        """Название раздела второго уровня."""
+        """Second-level section title."""
         if self.level <= 1:
             return ""
 
@@ -65,17 +66,17 @@ class Section:
 
 def extract_toc(doc: fitz.Document) -> list[Section]:
     """
-    Извлечение оглавления и вычисление диапазона страниц для каждого раздела.
+    Extract the table of contents and compute the page range for each section.
 
     Parameters
     ----------
     doc : fitz.Document
-        Открытый документ PyMuPDF.
+        Open PyMuPDF document.
 
     Returns
     -------
     list[Section]
-        Список объектов Section с диапазонами страниц.
+        List of ``Section`` objects with their page ranges.
     """
 
     raw_toc = doc.get_toc()
@@ -111,35 +112,35 @@ def extract_toc(doc: fitz.Document) -> list[Section]:
 
 def clean_text(text: str) -> str:
     """
-    Очищение сырого текста из PyMuPDF.
+    Clean raw text extracted by PyMuPDF.
 
-    Исправляет переносы слов на границах строк, удаляет номера страниц
-    и пустые маркеры списков, нормализует пробелы и переносы строк.
+    Repairs hyphenated words at line breaks, removes page numbers
+    and empty list bullets, and normalizes whitespace and line breaks.
 
     Parameters
     ----------
     text : str
-        Необработанный текст, извлечённый PyMuPDF.
+        Raw text extracted by PyMuPDF.
 
     Returns
     -------
     str
-        Очищенный текст.
+        Cleaned text.
     """
 
-    # Переносы слов
+    # Word hyphenation across line breaks
     text = re.sub(r"(\w)-\n(\w)", r"\1\2", text)
 
-    # Номера страниц — строки, состоящие только из цифр
+    # Page numbers — lines consisting solely of digits
     text = re.sub(r"^\d+\s*$", "", text, flags=re.MULTILINE)
 
-    # Пустые маркеры списков
+    # Empty list bullets
     text = re.sub(r"^[•\-]\s*$", "", text, flags=re.MULTILINE)
 
-    # Схлопывание трёх подряд идущих переноса строки до двух
+    # Collapse three or more consecutive newlines into two
     text = re.sub(r"\n{3,}", "\n\n", text)
 
-    # Схлопывание множественных пробелов
+    # Collapse runs of spaces
     text = re.sub(r" {2,}", " ", text)
 
     return text.strip()
@@ -149,25 +150,26 @@ def section_to_document(
     doc: fitz.Document, section: Section, source: str = ""
 ) -> Document | None:
     """
-    Преобразование раздела TOC в объект LlamaIndex Document с метаданными.
+    Convert a TOC section into a LlamaIndex ``Document`` with metadata.
 
-    Извлекает текст всех страниц раздела, очищает его и создаёт ``Document``
-    с метаданными главы/раздела/страниц. LlamaIndex автоматически разобьёт
-    ``Document`` на чанки при индексировании согласно ``Settings.chunk_size``.
+    Extracts the text of all pages in the section, cleans it and creates a
+    ``Document`` with chapter/section/page metadata. LlamaIndex will split
+    the ``Document`` into chunks during indexing according to
+    ``Settings.chunk_size``.
 
     Parameters
     ----------
     doc : fitz.Document
-        Открытый документ PyMuPDF.
+        Open PyMuPDF document.
     section : Section
-        Раздел с атрибутами ``page_start`` и ``page_end``.
+        Section with ``page_start`` and ``page_end`` attributes.
     source : str, optional
-        Имя исходного PDF (без расширения). Записывается в метаданные.
+        Name of the source PDF (without extension). Stored in metadata.
 
     Returns
     -------
     Document or None
-        ``Document`` с текстом и метаданными, или ``None`` если раздел пустой.
+        ``Document`` with text and metadata, or ``None`` if the section is empty.
     """
 
     pages_text: list[str] = []
@@ -200,23 +202,22 @@ def section_to_document(
 
 def load_documents(pdf_path: str | None = None) -> list[Document]:
     """
-    Загрузка PDF-корпуса и создание списка LlamaIndex Documents из разделов TOC.
+    Load the PDF corpus and create LlamaIndex Documents from TOC sections.
 
-    Основная точка входа для пайплайна загрузки. Каждый раздел TOC
-    становится отдельным ``Document`` с иерархическими метаданными.
-    LlamaIndex сам разобьёт их на чанки при вызове
-    ``VectorStoreIndex.from_documents()``.
+    Main entry point of the ingestion pipeline. Each TOC section becomes a
+    separate ``Document`` with hierarchical metadata. LlamaIndex splits them
+    into chunks when ``VectorStoreIndex.from_documents()`` is called.
 
     Parameters
     ----------
     pdf_path : str or None, optional
-        Путь к PDF-файлу или директории с PDF-файлами. По умолчанию
-        берётся из ``settings.corpus_path``.
+        Path to a PDF file or to a directory containing PDF files.
+        Defaults to ``settings.corpus_path``.
 
     Returns
     -------
     list[Document]
-        Список ``Document`` объектов, готовых к передаче в ``VectorStoreIndex``.
+        List of ``Document`` objects ready to be passed to ``VectorStoreIndex``.
     """
 
     root = Path(pdf_path) if pdf_path else settings.corpus_path
@@ -228,16 +229,17 @@ def load_documents(pdf_path: str | None = None) -> list[Document]:
 
     for pdf_file in pdf_files:
         doc = fitz.open(str(pdf_file))
-        source = pdf_file.stem
-        before = len(documents)
+        try:
+            source = pdf_file.stem
+            before = len(documents)
 
-        for section in extract_toc(doc):
-            llama_doc = section_to_document(doc, section, source=source)
+            for section in extract_toc(doc):
+                llama_doc = section_to_document(doc, section, source=source)
 
-            if llama_doc is not None:
-                documents.append(llama_doc)
-
-        doc.close()
+                if llama_doc is not None:
+                    documents.append(llama_doc)
+        finally:
+            doc.close()
 
         logger.info("  %s → %d sections", pdf_file.name, len(documents) - before)
 

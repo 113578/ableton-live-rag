@@ -1,5 +1,5 @@
 """
-Интерфейс командной строки RAG-системы.
+Command-line interface for the RAG system.
 """
 
 import asyncio
@@ -14,7 +14,7 @@ from ableton_rag.config import settings
 
 app = typer.Typer(
     name="rag",
-    help="RAG-система для документации экосистемы Ableton",
+    help="RAG system for the Ableton ecosystem documentation",
     no_args_is_help=True,
 )
 console = Console()
@@ -23,7 +23,7 @@ console = Console()
 @app.command()
 def ingest() -> None:
     """
-    Загрузка PDF, разбитие на чанки, векторизация и сохранение в Qdrant.
+    Load PDFs, split into chunks, vectorize and persist to Qdrant.
     """
 
     from ableton_rag import llm
@@ -36,59 +36,58 @@ def ingest() -> None:
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        progress.add_task("Извлечение документов из PDF...", total=None)
+        progress.add_task("Extracting documents from PDF...", total=None)
         documents = load_documents(pdf_path=settings.corpus_path)
 
-    console.print(f"[green]Извлечено {len(documents)} разделов из TOC[/green]")
+    console.print(f"[green]Extracted {len(documents)} TOC sections[/green]")
 
     for cfg in EMBEDDING_MODELS.values():
         console.print(
-            f"[dim]Индексирование → {cfg.collection_name} ({cfg.model_id})...[/dim]"
+            f"[dim]Indexing → {cfg.collection_name} ({cfg.model_id})...[/dim]"
         )
 
         llm.setup_embedding(cfg)
         build_index(documents, collection_name=cfg.collection_name)
 
-    console.print("[bold green]✓ Индексирование завершено![/bold green]")
+    console.print("[bold green]✓ Indexing complete![/bold green]")
 
 
 @app.command()
 def ask(
-    question: str = typer.Argument(..., help="Запрос пользователя"),
+    question: str = typer.Argument(..., help="User query"),
     top_k: int | None = typer.Option(
-        None, "--top-k", "-k", help="Количество фрагментов для контекста"
+        None, "--top-k", "-k", help="Number of context fragments"
     ),
 ) -> None:
     """
-    Задать вопрос и получить ответ от LLM с источниками из документации.
+    Ask a question and get an answer from the LLM with sources from the documentation.
 
     Parameters
     ----------
     question : str
-        Вопрос об Ableton Live на любом языке.
+        Question about Ableton Live in any language.
     top_k : int or None, optional
-        Количество фрагментов для контекста. Если не указан,
-        используется ``settings.similarity_top_k``.
+        Number of context fragments. If not provided,
+        ``settings.similarity_top_k`` is used.
     """
 
     from ableton_rag import llm
-    from ableton_rag.config import settings
     from ableton_rag.query import ask as query_ask
 
-    console.print("[dim]Инициализация...[/dim]")
+    console.print("[dim]Initializing...[/dim]")
     llm.setup()
 
     k = top_k or settings.similarity_top_k
 
     console.print()
-    console.print(Panel(question, title="[blue]Вопрос[/blue]", border_style="blue"))
+    console.print(Panel(question, title="[blue]Question[/blue]", border_style="blue"))
     console.print()
 
     async def _run() -> None:
-        with console.status("[dim]Поиск в документации...[/dim]"):
+        with console.status("[dim]Searching documentation...[/dim]"):
             answer = await query_ask(question, top_k=k)
 
-        console.print(Panel.fit("[green]Ответ[/green]", border_style="green"))
+        console.print(Panel.fit("[green]Answer[/green]", border_style="green"))
 
         async for token in answer.response_gen:
             console.print(token, end="")
@@ -96,10 +95,10 @@ def ask(
         console.print("\n")
 
         if answer.source_nodes:
-            table = Table(title="Источники", show_lines=True)
+            table = Table(title="Sources", show_lines=True)
             table.add_column("#", style="cyan", width=4)
-            table.add_column("Глава / Раздел", style="white")
-            table.add_column("Стр.", style="yellow", width=6)
+            table.add_column("Chapter / Section", style="white")
+            table.add_column("Page", style="yellow", width=6)
             table.add_column("Score", style="green", width=7)
 
             for i, node in enumerate(answer.source_nodes, 1):
@@ -122,43 +121,41 @@ def ask(
 
 @app.command()
 def search(
-    query: str = typer.Argument(..., help="Поисковый запрос"),
-    similarity_top_k: int = typer.Option(
-        5, "--top-k", "-k", help="Количество результатов"
-    ),
+    query: str = typer.Argument(..., help="Search query"),
+    similarity_top_k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
 ) -> None:
     """
-    Векторный поиск без генерации ответа.
+    Vector search without answer generation.
 
     Parameters
     ----------
     query : str
-        Поисковый запрос.
+        Search query.
     similarity_top_k : int
-        Количество результатов.
+        Number of results.
     """
 
     from ableton_rag import llm
     from ableton_rag.query import retrieve
 
-    console.print("[dim]Инициализация эмбеддингов...[/dim]")
+    console.print("[dim]Initializing embeddings...[/dim]")
     llm.setup()
 
-    with console.status("[dim]Поиск...[/dim]"):
+    with console.status("[dim]Searching...[/dim]"):
         results = asyncio.run(retrieve(query, similarity_top_k=similarity_top_k))
 
     for i, r in enumerate(results, 1):
-        meta = f"Глава: {r.chapter or '?'}"
+        meta = f"Chapter: {r.chapter or '?'}"
 
         if r.section:
-            meta += f" | Раздел: {r.section}"
+            meta += f" | Section: {r.section}"
 
-        meta += f" | Стр. {r.page_start}"
+        meta += f" | Page {r.page_start}"
 
         console.print(
             Panel(
                 f"[dim]{meta}[/dim]\n\n{r.text[:600]}...",
-                title=f"Результат {i}  (score: {r.score:.4f})",
+                title=f"Result {i}  (score: {r.score:.4f})",
                 border_style="cyan",
             )
         )
@@ -167,18 +164,18 @@ def search(
 @app.command()
 def stats() -> None:
     """
-    Показать статистику коллекции Qdrant.
+    Show statistics for the Qdrant collection.
 
-    Выводит таблицу с количеством точек, векторов и статусом коллекции.
+    Prints a table with the point count, vector count and collection status.
     """
 
     from ableton_rag.index import get_stats
 
     info = get_stats()
 
-    table = Table(title="Qdrant — статистика коллекции")
-    table.add_column("Параметр", style="cyan")
-    table.add_column("Значение", style="white")
+    table = Table(title="Qdrant — collection statistics")
+    table.add_column("Parameter", style="cyan")
+    table.add_column("Value", style="white")
 
     for key, value in info.items():
         table.add_row(key, str(value))
@@ -189,38 +186,37 @@ def stats() -> None:
 @app.command()
 def bot() -> None:
     """
-    Запуск Telegram-бота.
+    Start the Telegram bot.
 
-    Бот подключается к запущенному FastAPI-серверу (``rag serve``)
-    и отвечает на вопросы пользователей из Telegram.
+    The bot connects to a running FastAPI server (``rag serve``)
+    and answers user questions from Telegram.
     """
 
     from ableton_rag.bot.bot import run
-    from ableton_rag.config import settings
 
     if not settings.telegram_bot_token:
-        console.print("[red]Токен бота не задан.[/red]")
+        console.print("[red]Bot token is not set.[/red]")
         raise typer.Exit(1)
 
-    console.print("[bold green]Запуск Telegram-бота...[/bold green]")
+    console.print("[bold green]Starting Telegram bot...[/bold green]")
 
     run(token=settings.telegram_bot_token, api_base_url=settings.api_base_url)
 
 
 @app.command()
 def serve(
-    host: str = typer.Option("0.0.0.0", "--host", "-H", help="Адрес для привязки"),
-    port: int = typer.Option(8000, "--port", "-p", help="Порт"),
+    host: str = typer.Option("0.0.0.0", "--host", "-H", help="Bind address"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port"),
 ) -> None:
     """
-    Запуск FastAPI приложения.
+    Start the FastAPI application.
 
     Parameters
     ----------
     host : str
-        Адрес сервера.
+        Server address.
     port : int
-        Порт.
+        Port.
     """
 
     import uvicorn

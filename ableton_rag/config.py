@@ -1,5 +1,5 @@
 """
-Конфигурация проекта.
+Project configuration.
 """
 
 import logging
@@ -26,7 +26,7 @@ def get_logger(name: str) -> logging.Logger:
 
 class LLMProvider(str, Enum):
     """
-    Поддерживаемые провайдеры LLM.
+    Supported LLM providers.
     """
 
     ollama = "ollama"
@@ -36,64 +36,64 @@ class LLMProvider(str, Enum):
 
 class Settings(BaseSettings):
     """
-    Конфигурация проекта.
+    Project configuration.
 
-    Все параметры можно переопределить через переменные окружения
-    или файл ``.env`` в корне репозитория.
+    All parameters can be overridden via environment variables
+    or a ``.env`` file at the repository root.
 
     Attributes
     ----------
     llm_provider : LLMProvider
-        Провайдер LLM (``ollama``, ``openai`` или ``vllm``).
+        LLM provider (``ollama``, ``openai`` or ``vllm``).
     request_timeout : int
-        Таймаут запроса к Ollama в секундах.
+        Ollama request timeout in seconds.
     temperature : float
-        Температура генерации.
+        Generation temperature.
     ollama_base_url : str
-        Базовый URL сервера Ollama.
+        Base URL of the Ollama server.
     ollama_model : str
-        Имя модели Ollama.
+        Ollama model name.
     openai_api_key : str
-        API-ключ OpenAI.
+        OpenAI API key.
     openai_model : str
-        Имя модели OpenAI.
+        OpenAI model name.
     vllm_url_base : str
-        Базовый URL vLLM-сервера (OpenAI-совместимый API).
+        Base URL of the vLLM server (OpenAI-compatible API).
     vllm_api_key : str
-        API-ключ для vLLM.
+        API key for vLLM.
     vllm_model : str
-        Имя модели vLLM.
+        vLLM model name.
     guard_model : str
-        Имя модели для guardrails. Если пустое, используется основная LLM.
+        Model name for guardrails. If empty, the main LLM is used.
     embedding_model : str
-        Идентификатор модели эмбеддингов (для основного пайплайна).
+        Embedding model identifier (for the main pipeline).
     embedding_dim : int
-        Размерность эмбеддинга основной модели.
+        Embedding dimension of the main model.
     corpus_path : Path
-        Путь к директории с PDF-файлами корпуса.
+        Path to the directory containing PDF files of the corpus.
     qdrant_path : Path
-        Путь к директории с хранилищем Qdrant (используется только
-        при пустом ``qdrant_url``).
+        Path to the local Qdrant storage directory (used only when
+        ``qdrant_url`` is empty).
     qdrant_url : str
-        URL для клиента Qdrant.
+        URL for the Qdrant client.
     redis_url : str
-        URL для клиента Redis.
+        URL for the Redis client.
     collection_name : str
-        Базовое имя коллекции Qdrant.
+        Base name of the Qdrant collection.
     chunk_size : int
-        Максимальный размер чанка в токенах.
+        Maximum chunk size in tokens.
     chunk_overlap : int
-        Перекрытие между соседними чанками в токенах.
+        Overlap between adjacent chunks in tokens.
     context_window : int
-        Размер контекстного окна LLM в токенах.
+        Size of the LLM context window in tokens.
     num_output : int
-        Максимальное число токенов в ответе LLM.
+        Maximum number of tokens in the LLM response.
     similarity_top_k : int
-        Количество фрагментов, возвращаемых компонентом поиска по умолчанию.
+        Number of fragments returned by the default search component.
     telegram_bot_token : str
-        Токен Telegram-бота.
+        Telegram bot token.
     api_base_url : str
-        URL FastAPI-приложения.
+        URL of the FastAPI application.
     """
 
     model_config = SettingsConfigDict(
@@ -131,7 +131,7 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379"
 
-    active_embedding_model: str = "bge"
+    active_embedding_model: str = "e5"
     collection_name: str = "ableton"
 
     chunk_size: int = 512
@@ -149,20 +149,20 @@ settings = Settings()
 @dataclass(frozen=True)
 class EmbeddingModelConfig:
     """
-    Конфигурация модели эмбеддингов для экспериментов.
+    Embedding-model configuration for experiments.
 
     Attributes
     ----------
     name : str
-        Имя модели.
+        Model name.
     model_id : str
-        Идентификатор модели на HuggingFace.
+        HuggingFace model identifier.
     dim : int
-        Размерность эмбеддинга.
+        Embedding dimension.
     query_instruction : str
-        Префикс для запросов (E5 требует ``"query: "``).
+        Prefix for queries (E5 requires ``"query: "``).
     text_instruction : str
-        Префикс для документов (E5 требует ``"passage: "``).
+        Prefix for documents (E5 requires ``"passage: "``).
     """
 
     name: str
@@ -173,7 +173,7 @@ class EmbeddingModelConfig:
 
     @property
     def collection_name(self) -> str:
-        """Имя коллекции Qdrant."""
+        """Qdrant collection name."""
 
         return f"{settings.collection_name}_{self.name}"
 

@@ -1,5 +1,5 @@
 """
-Защита RAG-системы от нецелевого использования.
+Guardrails protecting the RAG system from misuse.
 """
 
 import asyncio
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.core.llms import LLM
 
-from ableton_rag.config import get_logger, settings
+from ableton_rag.config import LLMProvider, get_logger, settings
 
 logger = get_logger(__name__)
 
@@ -68,7 +68,7 @@ _REJECTION_MESSAGES: dict[str, str] = {
     "OFF_TOPIC": "🎵 I can only help with questions about Ableton Live and music production.",
 }
 
-_SAFE_CATEGORIES = frozenset(
+_VALID_CATEGORIES = frozenset(
     {
         "SAFE",
         "GREETING",
@@ -90,8 +90,6 @@ class GuardResult:
 def _guard_llm() -> LLM:
     if not settings.guard_model:
         return LlamaIndexSettings.llm
-
-    from ableton_rag.config import LLMProvider
 
     if settings.llm_provider == LLMProvider.ollama:
         from llama_index.llms.ollama import Ollama
@@ -126,39 +124,45 @@ def _guard_llm() -> LLM:
             timeout=settings.request_timeout,
         )
 
+    raise ValueError(f"Unsupported LLM provider: {settings.llm_provider!r}")
+
+
+def _format_history_block(history: list[str] | None) -> str:
+    if not history:
+        return ""
+
+    lines = "\n".join(f"- {h}" for h in history[-4:])
+
+    return f"Recent conversation:\n{lines}\n\n"
+
 
 async def guard(query: str, history: list[str] | None = None) -> GuardResult:
     """
-    Классификация пользовательского запроса как безопасного.
+    Classify the user query as safe or unsafe.
 
     Parameters
     ----------
     query : str
-        Запрос пользователя.
+        User query.
     history : list[str] or None, optional
-        Последние сообщения диалога для контекстной классификации.
-        Используются не более четырёх последних элементов.
+        Recent dialogue messages used for context-aware classification.
+        At most the last four entries are used.
 
     Returns
     -------
     GuardResult
-        Результат классификации.
+        Classification result.
     """
     llm = _guard_llm()
-    history_block = ""
-
-    if history:
-        lines = "\n".join(f"- {h}" for h in history[-4:])
-        history_block = f"Recent conversation:\n{lines}\n\n"
+    history_block = _format_history_block(history)
 
     prompt = _GUARD_PROMPT.format(query=query, history_block=history_block)
 
     response = await asyncio.to_thread(llm.complete, prompt)
-    category = (
-        response.text.strip().upper().split()[0] if response.text.strip() else "SAFE"
-    )
+    raw = response.text.strip()
+    category = raw.upper().split()[0] if raw else "SAFE"
 
-    if category not in _SAFE_CATEGORIES:
+    if category not in _VALID_CATEGORIES:
         logger.warning("Unexpected guard category %r — treating as SAFE", category)
 
         category = "SAFE"
@@ -173,28 +177,24 @@ async def guard(query: str, history: list[str] | None = None) -> GuardResult:
 
 async def rewrite(query: str, history: list[str] | None = None) -> str:
     """
-    Перефразирование пользовательского запроса для улучшения семантического поиска.
+    Rewrite the user's query to improve semantic retrieval.
 
     Parameters
     ----------
     query : str
-        Исходный запрос пользователя.
-    history : list[str] | None
-        Последние сообщения диалога для разрешения местоимений и анафорических ссылок.
-        Используются не более четырёх последних элементов.
+        Original user query.
+    history : list[str] or None, optional
+        Recent dialogue messages, used to resolve pronouns and anaphoric
+        references. At most the last four entries are used.
 
     Returns
     -------
     str
-        Перефразированный запрос, оптимизированный для векторного поиска.
-        Возвращает исходный ``query``, если результат пустой или превышает 300 символов.
+        Rewritten query optimized for vector search. Returns the original
+        ``query`` if the result is empty or longer than 300 characters.
     """
     llm = _guard_llm()
-    history_block = ""
-
-    if history:
-        lines = "\n".join(f"- {h}" for h in history[-4:])
-        history_block = f"Recent conversation:\n{lines}\n\n"
+    history_block = _format_history_block(history)
 
     prompt = _REWRITE_PROMPT.format(query=query, history_block=history_block)
 
@@ -211,17 +211,17 @@ async def rewrite(query: str, history: list[str] | None = None) -> str:
 
 def rejection_message(category: str) -> str:
     """
-    Вывод сообщения об отказе.
+    Return the rejection message for a given category.
 
     Parameters
     ----------
     category : str
-        Категория запроса.
+        Query category.
 
     Returns
     -------
     str
-        Сообщение об отказе.
+        Rejection message.
     """
     return _REJECTION_MESSAGES.get(
         category, "😕 Sorry, I can only answer questions about the Ableton ecosystem."

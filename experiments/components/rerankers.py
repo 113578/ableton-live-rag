@@ -1,5 +1,5 @@
 """
-Конфигурации ранжировщиков для экспериментов.
+Reranker configurations for experiments.
 """
 
 from collections.abc import Callable
@@ -18,14 +18,14 @@ RERANKER_MODELS: dict[str, str] = {
 @dataclass
 class RerankerConfig:
     """
-    Обёртка над ранжировщиком с единым интерфейсом для оценки.
+    Wrapper around a reranker exposing a unified interface for evaluation.
 
     Attributes
     ----------
     name : str
-        Название ранжировщика.
+        Reranker name.
     description : str
-        Описание ранжировщика.
+        Reranker description.
     """
 
     name: str
@@ -38,21 +38,21 @@ class RerankerConfig:
         self, query: str, nodes: list[NodeWithScore], top_k: int
     ) -> list[NodeWithScore]:
         """
-        Запуск ранжирования.
+        Run the reranking.
 
         Parameters
         ----------
         query : str
-            Поисковый запрос.
+            Search query.
         nodes : list[NodeWithScore]
-            Кандидаты от базового ретривера.
+            Candidates from the base retriever.
         top_k : int
-            Количество результатов после ранжирования.
+            Number of results after reranking.
 
         Returns
         -------
         list[NodeWithScore]
-            Переранжированные узлы с оценками.
+            Reranked nodes with scores.
         """
 
         return self._rerank_fn(query, nodes, top_k)
@@ -90,17 +90,17 @@ def build_rerankers(
     selected: list[str] | None = None,
 ) -> list[RerankerConfig]:
     """
-    Создание конфигураций ранжировщиков для эксперимента.
+    Create reranker configurations for an experiment.
 
     Parameters
     ----------
     selected : list[str] or None, optional
-        Ключи из ``RERANKER_MODELS``. ``None`` — все доступные модели.
+        Keys from ``RERANKER_MODELS``. ``None`` loads all available models.
 
     Returns
     -------
     list[RerankerConfig]
-        Список конфигураций ранжировщиков.
+        List of reranker configurations.
     """
 
     keys = selected if selected is not None else list(RERANKER_MODELS)
