@@ -1,5 +1,5 @@
 """
-Управление векторным индексом: создание, загрузка, статистика.
+Vector index management: creation, loading, statistics.
 """
 
 import json
@@ -9,8 +9,9 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.schema import BaseNode, TextNode
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from qdrant_client import AsyncQdrantClient, QdrantClient
+from qdrant_client.http.exceptions import UnexpectedResponse
 
-from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
+from ableton_rag.config import EMBEDDING_MODELS, get_logger, settings
 
 logger = get_logger(__name__)
 
@@ -24,12 +25,12 @@ def _active_collection() -> str:
 
 def _get_qdrant_client() -> QdrantClient:
     """
-    Получение экземпляра QdrantClient (синглтон).
+    Return the singleton ``QdrantClient`` instance.
 
     Returns
     -------
     QdrantClient
-        Клиент Qdrant.
+        Qdrant client.
     """
 
     global _qdrant_client
@@ -48,12 +49,12 @@ def _get_qdrant_client() -> QdrantClient:
 
 def _get_async_qdrant_client() -> AsyncQdrantClient | None:
     """
-    Получение экземпляра AsyncQdrantClient (синглтон).
+    Return the singleton ``AsyncQdrantClient`` instance.
 
     Returns
     -------
     AsyncQdrantClient or None
-        Асинхронный клиент Qdrant, либо ``None`` для локального хранилища.
+        Asynchronous Qdrant client, or ``None`` for local storage.
     """
 
     global _async_qdrant_client
@@ -69,17 +70,17 @@ def _get_async_qdrant_client() -> AsyncQdrantClient | None:
 
 def _get_vector_store(collection_name: str | None = None) -> QdrantVectorStore:
     """
-    Создание QdrantVectorStore.
+    Create a ``QdrantVectorStore``.
 
     Parameters
     ----------
     collection_name : str or None, optional
-        Имя коллекции.
+        Collection name.
 
     Returns
     -------
     QdrantVectorStore
-        Хранилище векторов для LlamaIndex.
+        Vector store for LlamaIndex.
     """
 
     aclient = _get_async_qdrant_client()
@@ -96,19 +97,19 @@ def build_index(
     collection_name: str | None = None,
 ) -> VectorStoreIndex:
     """
-    Построение VectorStoreIndex из документов с сохранением в Qdrant.
+    Build a ``VectorStoreIndex`` from documents and persist it to Qdrant.
 
     Parameters
     ----------
     documents : list[Document]
-        Список документов из ``ingest.load_documents()``.
+        List of documents from ``ingest.load_documents()``.
     collection_name : str or None, optional
-        Имя коллекции.
+        Collection name.
 
     Returns
     -------
     VectorStoreIndex
-        Сохранённый индекс.
+        Persisted index.
     """
 
     name = collection_name or _active_collection()
@@ -116,10 +117,8 @@ def build_index(
 
     logger.info("Building index '%s' from %d documents...", name, len(documents))
 
-    try:
+    if client.collection_exists(collection_name=name):
         client.delete_collection(collection_name=name)
-    except Exception:
-        pass
 
     vector_store = _get_vector_store(collection_name=name)
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -136,22 +135,22 @@ def build_index(
 
 def load_index(collection_name: str | None = None) -> VectorStoreIndex:
     """
-    Загрузка созданного VectorStoreIndex из Qdrant.
+    Load an existing ``VectorStoreIndex`` from Qdrant.
 
     Parameters
     ----------
     collection_name : str or None, optional
-        Имя коллекции.
+        Collection name.
 
     Returns
     -------
     VectorStoreIndex
-        Загруженный индекс.
+        Loaded index.
 
     Raises
     ------
     RuntimeError
-        Если коллекция не найдена (инжест не был выполнен).
+        If the collection is not found (ingest has not been run).
     """
 
     name = collection_name or _active_collection()
@@ -171,17 +170,17 @@ def load_index(collection_name: str | None = None) -> VectorStoreIndex:
 
 def parse_nodes(documents: list[Document]) -> list[BaseNode]:
     """
-    Разбивка документов на чанки с помощью SentenceSplitter.
+    Split documents into chunks using ``SentenceSplitter``.
 
     Parameters
     ----------
     documents : list[Document]
-        Список документов из ``ingest.load_documents()``.
+        List of documents from ``ingest.load_documents()``.
 
     Returns
     -------
     list[BaseNode]
-        Список чанков.
+        List of chunks.
     """
 
     parser = SentenceSplitter(
@@ -194,52 +193,61 @@ def parse_nodes(documents: list[Document]) -> list[BaseNode]:
 
 def get_stats(collection_name: str | None = None) -> dict:
     """
-    Получить статистику коллекции Qdrant.
+    Return statistics for a Qdrant collection.
 
     Parameters
     ----------
     collection_name : str or None, optional
-        Имя коллекции.
+        Collection name.
 
     Returns
     -------
     dict
-        Словарь с ключами ``collection``, ``points_count``,
-        ``indexed_vectors_count``, ``status``.
+        Dictionary with the keys ``collection``, ``points_count``,
+        ``indexed_vectors_count`` and ``status``.
     """
 
     name = collection_name or _active_collection()
     client = _get_qdrant_client()
 
-    try:
-        info = client.get_collection(collection_name=name)
-        return {
-            "collection": name,
-            "points_count": info.points_count,
-            "indexed_vectors_count": info.indexed_vectors_count,
-            "status": info.status.value,
-        }
-    except Exception:
+    if not client.collection_exists(collection_name=name):
         return {
             "collection": name,
             "points_count": 0,
-            "status": "not_found (запустите 'rag ingest')",
+            "status": "not_found (run 'rag ingest')",
         }
+
+    try:
+        info = client.get_collection(collection_name=name)
+    except (UnexpectedResponse, ValueError) as exc:
+        logger.warning("Failed to read collection '%s' stats: %s", name, exc)
+        return {
+            "collection": name,
+            "points_count": 0,
+            "status": "error",
+        }
+
+    return {
+        "collection": name,
+        "points_count": info.points_count,
+        "indexed_vectors_count": info.indexed_vectors_count,
+        "status": info.status.value,
+    }
 
 
 def get_all_nodes(collection_name: str | None = None) -> list[BaseNode]:
     """
-    Загрузка всех узлов из Qdrant (для BM25-индекса).
+    Load all nodes from Qdrant (e.g. for a BM25 index).
 
     Parameters
     ----------
     collection_name : str or None, optional
-        Имя коллекции.
+        Collection name.
 
     Returns
     -------
     list[BaseNode]
-        Все узлы коллекции.
+        All nodes in the collection.
     """
 
     name = collection_name or _active_collection()

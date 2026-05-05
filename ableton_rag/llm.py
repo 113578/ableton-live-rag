@@ -1,11 +1,11 @@
 """
-Конфигурация LlamaIndex для работы с LLM.
+LlamaIndex configuration for working with LLMs.
 """
 
 from llama_index.core import Settings as LlamaIndexSettings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
-from ableton_live_rag.config import (
+from ableton_rag.config import (
     EMBEDDING_MODELS,
     EmbeddingModelConfig,
     LLMProvider,
@@ -18,12 +18,12 @@ logger = get_logger(__name__)
 
 def setup_embedding(cfg: EmbeddingModelConfig) -> None:
     """
-    Настройка модели эмбеддингов в LlamaIndex.
+    Configure the embedding model in LlamaIndex.
 
     Parameters
     ----------
     cfg : EmbeddingModelConfig
-        Конфигурация модели эмбеддингов.
+        Embedding-model configuration.
     """
 
     logger.info("Embedding model: %s", cfg.model_id)
@@ -37,7 +37,7 @@ def setup_embedding(cfg: EmbeddingModelConfig) -> None:
 
 def setup() -> None:
     """
-    Настройка параметров LlamaIndex: активная модель эмбеддингов и LLM.
+    Configure LlamaIndex settings: active embedding model and LLM.
     """
 
     logger.info("Setting up LLM provider: %s", settings.llm_provider.value)
@@ -55,6 +55,8 @@ def setup() -> None:
         _setup_openai()
     elif settings.llm_provider == LLMProvider.vllm:
         _setup_vllm()
+    else:
+        raise ValueError(f"Unsupported LLM provider: {settings.llm_provider!r}")
 
 
 def _setup_ollama() -> None:

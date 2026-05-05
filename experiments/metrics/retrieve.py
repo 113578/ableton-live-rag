@@ -1,5 +1,5 @@
 """
-Метрики для оценки качества поиска.
+Metrics for evaluating retrieval quality.
 """
 
 import math
@@ -7,17 +7,17 @@ import math
 
 def hit_rate(relevances: list[bool]) -> float:
     """
-    Расчёт Hit Rate.
+    Compute Hit Rate.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка.
+        Binary relevance flags of the ranked list.
 
     Returns
     -------
     float
-        1.0 или 0.0.
+        ``1.0`` or ``0.0``.
     """
 
     return 1.0 if any(relevances) else 0.0
@@ -25,17 +25,17 @@ def hit_rate(relevances: list[bool]) -> float:
 
 def mrr(relevances: list[bool]) -> float:
     """
-    Расчёт Mean Reciprocal Rank.
+    Compute Mean Reciprocal Rank.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка.
+        Binary relevance flags of the ranked list.
 
     Returns
     -------
     float
-        Значение MRR. Возвращает 0.0 если ни один результат не релевантен.
+        MRR value. Returns ``0.0`` if no result is relevant.
     """
 
     for i, rel in enumerate(relevances):
@@ -47,19 +47,19 @@ def mrr(relevances: list[bool]) -> float:
 
 def precision_at_k(relevances: list[bool], k: int | None = None) -> float:
     """
-    Расчёт Precision@k.
+    Compute Precision@k.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка.
+        Binary relevance flags of the ranked list.
     k : int or None, optional
-        Первые k результатов.
+        First ``k`` results to consider.
 
     Returns
     -------
     float
-        Доля релевантных результатов.
+        Fraction of relevant results.
     """
 
     rels = relevances[:k] if k else relevances
@@ -75,21 +75,21 @@ def recall_at_k(
     k: int | None = None,
 ) -> float:
     """
-    Расчёт Recall@k.
+    Compute Recall@k.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка.
+        Binary relevance flags of the ranked list.
     total_relevant : int
-        Общее число релевантных документов в коллекции.
+        Total number of relevant documents in the collection.
     k : int or None, optional
-        Первые k результатов.
+        First ``k`` results to consider.
 
     Returns
     -------
     float
-        Доля найденных релевантных документов.
+        Fraction of relevant documents that were retrieved.
     """
 
     if total_relevant == 0:
@@ -106,22 +106,22 @@ def ndcg_at_k(
     k: int | None = None,
 ) -> float:
     """
-    Расчёт NDCG@k.
+    Compute NDCG@k.
 
     Parameters
     ----------
     relevances : list[bool]
-        Бинарные релевантности ранжированного списка (по одной записи на
-        уникальную страницу — передавайте dedup_relevances).
+        Binary relevance flags of the ranked list (one entry per unique
+        page — pass ``dedup_relevances``).
     total_relevant : int
-        Общее число релевантных страниц в коллекции (из ground truth).
+        Total number of relevant pages in the collection (from ground truth).
     k : int or None, optional
-        Первые k результатов.
+        First ``k`` results to consider.
 
     Returns
     -------
     float
-        Значение NDCG в диапазоне [0, 1].
+        NDCG value in the range ``[0, 1]``.
     """
 
     rels = relevances[:k] if k else relevances
@@ -144,23 +144,23 @@ def is_page_relevant(
     ground_truth_ranges: list[list[int]],
 ) -> bool:
     """
-    Проверка релевантности страницы: совпадение источника и попадание в диапазон.
+    Check whether a page is relevant: source matches and page falls in range.
 
     Parameters
     ----------
     source : str
-        Источник найденного чанка (имя PDF без расширения).
+        Source of the retrieved chunk (PDF name without extension).
     page : int
-        Номер страницы (1-indexed).
+        Page number (1-indexed).
     ground_truth_source : str
-        Источник эталонного ответа.
+        Source of the ground truth answer.
     ground_truth_ranges : list[list[int]]
-        Список пар ``[start, end]`` — эталонные диапазоны страниц.
+        List of ``[start, end]`` pairs — ground-truth page ranges.
 
     Returns
     -------
     bool
-        ``True`` если источник совпадает и страница попадает хотя бы в один диапазон.
+        ``True`` if the source matches and the page falls within at least one range.
     """
 
     if source != ground_truth_source:
@@ -175,21 +175,21 @@ def compute_relevances(
     ground_truth_ranges: list[list[int]],
 ) -> list[bool]:
     """
-    Вычисление бинарной релевантности для каждого результата поиска.
+    Compute binary relevance for each search result.
 
     Parameters
     ----------
     retrieved : list[tuple[str, int]]
-        Список пар ``(source, page_start)`` из метаданных найденных чанков.
+        List of ``(source, page_start)`` pairs from retrieved chunks' metadata.
     ground_truth_source : str
-        Источник эталонного ответа.
+        Source of the ground-truth answer.
     ground_truth_ranges : list[list[int]]
-        Список пар ``[start, end]`` — эталонные диапазоны страниц.
+        List of ``[start, end]`` pairs — ground-truth page ranges.
 
     Returns
     -------
     list[bool]
-        Список булевых значений: ``True`` если чанк релевантен.
+        List of booleans: ``True`` if the chunk is relevant.
     """
 
     return [
@@ -200,17 +200,17 @@ def compute_relevances(
 
 def count_total_relevant(ground_truth_ranges: list[list[int]]) -> int:
     """
-    Подсчёт числа уникальных релевантных страниц в ground truth.
+    Count the number of unique relevant pages in the ground truth.
 
     Parameters
     ----------
     ground_truth_ranges : list[list[int]]
-        Список пар ``[start, end]`` — эталонные диапазоны страниц.
+        List of ``[start, end]`` pairs — ground-truth page ranges.
 
     Returns
     -------
     int
-        Число уникальных релевантных страниц.
+        Number of unique relevant pages.
     """
 
     pages: set[int] = set()

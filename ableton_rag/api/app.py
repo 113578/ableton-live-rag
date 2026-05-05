@@ -1,5 +1,5 @@
 """
-FastAPI-приложение.
+FastAPI application.
 """
 
 import asyncio
@@ -12,11 +12,11 @@ from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from llama_index.core.llms import ChatMessage
 
-from ableton_live_rag import guardrails, llm
-from ableton_live_rag import query as rag_query
-from ableton_live_rag.config import EMBEDDING_MODELS, get_logger, settings
-from ableton_live_rag.index import get_stats
-from ableton_live_rag.api.schemas import (
+from ableton_rag import guardrails, llm
+from ableton_rag import query as rag_query
+from ableton_rag.config import EMBEDDING_MODELS, get_logger, settings
+from ableton_rag.index import get_stats
+from ableton_rag.api.schemas import (
     AskRequest,
     ChatRequest,
     SearchRequest,
@@ -27,8 +27,8 @@ logger = get_logger(__name__)
 
 
 def _run_ingest() -> None:
-    from ableton_live_rag.index import build_index
-    from ableton_live_rag.ingest import load_documents
+    from ableton_rag.index import build_index
+    from ableton_rag.ingest import load_documents
 
     documents = load_documents(pdf_path=settings.corpus_path)
     collection = EMBEDDING_MODELS[settings.active_embedding_model].collection_name
@@ -76,12 +76,12 @@ async def health() -> dict:
 @app.get("/stats")
 async def stats() -> dict:
     """
-    Статистика коллекции Qdrant.
+    Return statistics for the Qdrant collection.
 
     Returns
     -------
     dict
-        Словарь с параметрами и значениями коллекции.
+        Dictionary of collection parameters and values.
     """
 
     return get_stats(
@@ -94,17 +94,17 @@ async def stats() -> dict:
 @app.post("/search", response_model=list[SearchResultOut])
 async def search(req: SearchRequest) -> list[SearchResultOut]:
     """
-    Векторный поиск по документации без генерации ответа.
+    Vector search over the documentation without answer generation.
 
     Parameters
     ----------
     req : SearchRequest
-        Запрос с поисковой строкой и опциональным top_k.
+        Request with the search string and an optional ``top_k``.
 
     Returns
     -------
     list[SearchResultOut]
-        Список результатов, отсортированных по убыванию релевантности.
+        Results sorted by descending relevance.
     """
 
     k = req.top_k or settings.similarity_top_k
@@ -116,17 +116,17 @@ async def search(req: SearchRequest) -> list[SearchResultOut]:
 @app.post("/ask")
 async def ask(req: AskRequest) -> StreamingResponse:
     """
-    Задать вопрос и получить SSE-стрим токенов ответа и источников.
+    Ask a question and stream answer tokens and sources via SSE.
 
     Parameters
     ----------
     req : AskRequest
-        Запрос с вопросом и опциональным top_k.
+        Request with a question and an optional ``top_k``.
 
     Returns
     -------
     StreamingResponse
-        Поток Server-Sent Events.
+        Server-Sent Events stream.
     """
 
     k = req.top_k or settings.similarity_top_k
@@ -149,17 +149,17 @@ async def ask(req: AskRequest) -> StreamingResponse:
 @app.post("/chat")
 async def chat(req: ChatRequest) -> StreamingResponse:
     """
-    Диалоговый чат с сохранением истории в рамках сессии.
+    Conversational chat with per-session history.
 
     Parameters
     ----------
     req : ChatRequest
-        Сообщение, опциональный ``session_id`` и ``top_k``.
+        Message, optional ``session_id`` and ``top_k``.
 
     Returns
     -------
     StreamingResponse
-        Поток Server-Sent Events.
+        Server-Sent Events stream.
     """
 
     session_id = req.session_id or str(uuid.uuid4())
@@ -185,7 +185,7 @@ async def chat(req: ChatRequest) -> StreamingResponse:
             yield "data: [DONE]\n\n"
             return
 
-        query = await guardrails.rewrite(req.message)
+        query = await guardrails.rewrite(req.message, history=history)
         engine = rag_query.create_chat_engine(session_id=session_id, top_k=k)
         cached = await asyncio.to_thread(rag_query._llmcache.check, query)
 

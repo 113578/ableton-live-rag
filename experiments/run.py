@@ -1,18 +1,19 @@
 """
-Единая точка входа для экспериментов.
+Single entry point for experiments.
 
-Поддерживает оценку ретриверов, ранжировщиков, генераторов и сквозного RAG-пайплайна,
-а также поиск оптимальных параметров чанкинга.
+Supports evaluating retrievers, rerankers, generators and the end-to-end
+RAG pipeline, plus searching for optimal chunking parameters.
 
-Перед запуском создайте индексы: ``uv run scripts/build_eval_indexes.py``.
-Для команды ``chunking`` с vector/hybrid-ретривером: ``uv run scripts/build_chunking_indexes.py``.
+Before running, build the indexes: ``uv run scripts/build_eval_indexes.py``.
+For the ``chunking`` command with vector/hybrid retrievers:
+``uv run scripts/build_chunking_indexes.py``.
 
-Примеры:
+Examples:
     uv run experiments/run.py retriever --top-k 5
     uv run experiments/run.py chunking --chunk-size 512 --overlap 64 --retriever vector/bm25
     uv run experiments/run.py reranker --top-k 5 --retriever hybrid_rrf/e5
     uv run experiments/run.py generator --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
-    uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6
+    uv run experiments/run.py end2end --top-k 5 --retriever hybrid_rrf/e5 --reranker minilm-l6 --generator gpt-5.4
 """
 
 import asyncio
@@ -21,9 +22,8 @@ import typer
 from llama_index.core import Settings as LlamaSettings
 from rich.table import Table
 
-from ableton_live_rag.config import EMBEDDING_MODELS
-from ableton_live_rag.ingest import load_documents
-from ableton_live_rag.config import settings
+from ableton_rag.config import EMBEDDING_MODELS, settings
+from ableton_rag.ingest import load_documents
 from experiments.components import (
     RerankerConfig,
     build_generators,
@@ -64,17 +64,17 @@ def _load_active(dataset_path=None) -> tuple[list, list, list]:
     LlamaSettings.chunk_size = settings.chunk_size
     LlamaSettings.chunk_overlap = settings.chunk_overlap
 
-    console.print("[dim]Загрузка документов...[/dim]")
+    console.print("[dim]Loading documents...[/dim]")
     documents = load_documents()
     nodes = parse_nodes_with_config(
         documents, settings.chunk_size, settings.chunk_overlap
     )
 
-    console.print("[dim]Загрузка индекса из Qdrant...[/dim]")
+    console.print("[dim]Loading index from Qdrant...[/dim]")
     indexes = load_indexes(active_embedding_configs)
 
     dataset = load_dataset(dataset_path) if dataset_path else load_dataset()
-    console.print(f"[green]Загружено {len(dataset)} вопросов[/green]")
+    console.print(f"[green]Loaded {len(dataset)} questions[/green]")
 
     retriever_configs = build_retrievers(
         indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
@@ -85,7 +85,7 @@ def _load_active(dataset_path=None) -> tuple[list, list, list]:
 
 def _print_retriever_table(results: list[dict], top_k: int) -> None:
     table = Table(
-        title=f"Результаты эксперимента (top_k={top_k})",
+        title=f"Experiment results (top_k={top_k})",
         show_lines=True,
     )
 
@@ -125,7 +125,7 @@ def _print_retriever_table(results: list[dict], top_k: int) -> None:
 
 def _print_reranker_table(results: list[dict], top_k: int) -> None:
     table = Table(
-        title=f"Результаты эксперимента (top_k={top_k})",
+        title=f"Experiment results (top_k={top_k})",
         show_lines=True,
     )
 
@@ -192,13 +192,11 @@ def _print_generator_table(results: list[dict], title: str) -> None:
 
 @app.command()
 def retriever(
-    top_k: int = typer.Option(5, "--top-k", "-k", help="Количество результатов"),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
+    save: bool = typer.Option(False, "--save", help="Persist detailed results to JSON"),
 ) -> None:
     """
-    Оценка ретриверов на валидационном наборе данных.
+    Evaluate retrievers on the validation dataset.
     """
 
     indexes, nodes, dataset = prepare_experiment()
@@ -206,7 +204,7 @@ def retriever(
     configs = build_retrievers(
         indexes=indexes, nodes=nodes, embedding_configs=EMBEDDING_MODELS
     )
-    console.print(f"[green]Подготовлено {len(configs)} ретриверов[/green]\n")
+    console.print(f"[green]Prepared {len(configs)} retrievers[/green]\n")
 
     results: list[dict] = []
 
@@ -266,30 +264,26 @@ def _evaluate_reranker(
 
 @app.command()
 def reranker(
-    top_k: int = typer.Option(
-        5, "--top-k", "-k", help="Количество финальных результатов"
-    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of final results"),
     retriever_name: str = typer.Option(
         "vector/bge",
         "--retriever",
         "-r",
-        help="Ретривер",
+        help="Retriever",
     ),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
+    save: bool = typer.Option(False, "--save", help="Persist detailed results to JSON"),
 ) -> None:
     """
-    Оценка ранжировщиков поверх базового ретривера.
+    Evaluate rerankers on top of a base retriever.
     """
 
     retriever_configs, _, dataset = _load_active()
-    base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
-    console.print(f"[green]Базовый ретривер: {base_retriever.name}[/green]")
+    base_retriever = find_by_name(retriever_configs, retriever_name, "Retriever")
+    console.print(f"[green]Base retriever: {base_retriever.name}[/green]")
 
-    console.print("[dim]Загрузка моделей ранжировщиков...[/dim]")
+    console.print("[dim]Loading reranker models...[/dim]")
     reranker_configs = build_rerankers()
-    console.print(f"[green]Подготовлено {len(reranker_configs)} ранжировщиков[/green]")
+    console.print(f"[green]Prepared {len(reranker_configs)} rerankers[/green]")
 
     results: list[dict] = []
 
@@ -319,45 +313,42 @@ def reranker(
 
 @app.command()
 def generator(
-    top_k: int = typer.Option(
-        5, "--top-k", "-k", help="Количество фрагментов контекста"
-    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of context fragments"),
     retriever_name: str = typer.Option(
         "vector/bge",
         "--retriever",
         "-r",
-        help="Базовый ретривер (например vector/bge, hybrid_rrf/bge, bm25)",
+        help="Base retriever (e.g. vector/bge, hybrid_rrf/bge, bm25)",
     ),
     reranker_name: str | None = typer.Option(
-        None, "--reranker", help="Имя ранжировщика (опционально)"
+        None, "--reranker", help="Reranker name (optional)"
     ),
+    generator_names: list[str] = typer.Option([], "--generator", "-g", help="LLM name"),
     candidate_k: int = typer.Option(
-        15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
+        15, "--candidate-k", help="Candidate-pool size for the reranker"
     ),
     concurrency: int = typer.Option(
-        16, "--concurrency", "-c", help="Число параллельных запросов"
+        16, "--concurrency", "-c", help="Number of parallel requests"
     ),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
+    save: bool = typer.Option(False, "--save", help="Persist detailed results to JSON"),
 ) -> None:
     """
-    Оценка генераторов поверх фиксированного ретривера.
+    Evaluate generators on top of a fixed retriever.
     """
 
     retriever_configs, _, dataset = _load_active()
-    base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
-    console.print(f"[green]Базовый ретривер: {base_retriever.name}[/green]")
+    base_retriever = find_by_name(retriever_configs, retriever_name, "Retriever")
+    console.print(f"[green]Base retriever: {base_retriever.name}[/green]")
 
     selected_reranker: RerankerConfig | None = None
 
     if reranker_name is not None:
         reranker_configs = build_rerankers()
-        selected_reranker = find_by_name(reranker_configs, reranker_name, "Ранжировщик")
+        selected_reranker = find_by_name(reranker_configs, reranker_name, "Reranker")
 
-    console.print("[dim]Загрузка моделей генераторов...[/dim]")
-    generator_configs = build_generators()
-    console.print(f"[green]Подготовлено {len(generator_configs)} генераторов[/green]")
+    console.print("[dim]Loading generator models...[/dim]")
+    generator_configs = build_generators(selected=generator_names or None)
+    console.print(f"[green]Prepared {len(generator_configs)} generators[/green]")
 
     metrics = build_judge_metrics()
 
@@ -386,7 +377,7 @@ def generator(
         return results
 
     results = asyncio.run(_run())
-    _print_generator_table(results, title="Результаты эксперимента")
+    _print_generator_table(results, title="Experiment results")
 
     if save:
         save_results(results, RESULTS_DIR / "generator")
@@ -394,25 +385,22 @@ def generator(
 
 @app.command()
 def end2end(
-    top_k: int = typer.Option(
-        5, "--top-k", "-k", help="Количество фрагментов контекста"
-    ),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of context fragments"),
     retriever_name: str = typer.Option(
-        "vector/bge", "--retriever", "-r", help="Ретривер"
+        "vector/bge", "--retriever", "-r", help="Retriever"
     ),
-    reranker_name: str | None = typer.Option(None, "--reranker", help="Ранжировщик"),
+    reranker_name: str | None = typer.Option(None, "--reranker", help="Reranker"),
+    generator_names: list[str] = typer.Option([], "--generator", "-g", help="LLM name"),
     candidate_k: int = typer.Option(
-        15, "--candidate-k", help="Размер пула кандидатов для ранжировщика"
+        15, "--candidate-k", help="Candidate-pool size for the reranker"
     ),
     concurrency: int = typer.Option(
-        5, "--concurrency", "-c", help="Число параллельных запросов"
+        5, "--concurrency", "-c", help="Number of parallel requests"
     ),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
+    save: bool = typer.Option(False, "--save", help="Persist detailed results to JSON"),
 ) -> None:
     """
-    Сквозная оценка всех компонентов.
+    End-to-end evaluation of all components.
     """
 
     retriever_configs, _, dataset = _load_active(TEST_DATASET_PATH)
@@ -438,9 +426,9 @@ def end2end(
     retriever_results.sort(key=lambda r: category_order.get(r["category"], 99))
     _print_retriever_table(retriever_results, top_k)
 
-    base_retriever = find_by_name(retriever_configs, retriever_name, "Ретривер")
+    base_retriever = find_by_name(retriever_configs, retriever_name, "Retriever")
     console.print(
-        f"[green]Базовый ретривер для фаз 2–3: {base_retriever.name}[/green]\n"
+        f"[green]Base retriever for phases 2-3: {base_retriever.name}[/green]\n"
     )
 
     reranker_cfgs = build_rerankers()
@@ -467,18 +455,18 @@ def end2end(
 
     selected_reranker: RerankerConfig | None = None
     if reranker_name is not None:
-        selected_reranker = find_by_name(reranker_cfgs, reranker_name, "Ранжировщик")
+        selected_reranker = find_by_name(reranker_cfgs, reranker_name, "Reranker")
 
     pipeline_label = (
         f"{base_retriever.name} → {selected_reranker.name}"
         if selected_reranker is not None
         else base_retriever.name
     )
-    console.print(f"[green]Пайплайн поиска: {pipeline_label}[/green]")
+    console.print(f"[green]Search pipeline: {pipeline_label}[/green]")
 
-    console.print("[dim]Загрузка моделей генераторов...[/dim]")
-    generator_configs = build_generators()
-    console.print(f"[green]Подготовлено {len(generator_configs)} генераторов[/green]")
+    console.print("[dim]Loading generator models...[/dim]")
+    generator_configs = build_generators(selected=generator_names or None)
+    console.print(f"[green]Prepared {len(generator_configs)} generators[/green]")
 
     metrics = build_judge_metrics()
 
@@ -523,7 +511,7 @@ def end2end(
 
 def _print_chunking_table(results: list[dict], top_k: int, retriever: str) -> None:
     table = Table(
-        title=f"Чанкинг: {retriever} (top_k={top_k})",
+        title=f"Chunking: {retriever} (top_k={top_k})",
         show_lines=True,
     )
 
@@ -563,35 +551,33 @@ def chunking(
         [128, 256, 512, 1024],
         "--chunk-size",
         "-c",
-        help="Размеры чанков в токенах",
+        help="Chunk sizes in tokens",
     ),
     overlaps: list[int] = typer.Option(
         [16, 32, 64, 128],
         "--overlap",
         "-o",
-        help="Перекрытия чанков в токенах",
+        help="Chunk overlaps in tokens",
     ),
-    top_k: int = typer.Option(5, "--top-k", "-k", help="Количество результатов"),
+    top_k: int = typer.Option(5, "--top-k", "-k", help="Number of results"),
     retriever_name: str = typer.Option(
         "bm25",
         "--retriever",
         "-r",
         help=(
-            "Ретривер для оценки (bm25, tfidf — без pre-built индексов; "
-            "vector/bge, hybrid_rrf/e5 и т.д. — запустите build_chunking_indexes.py)"
+            "Retriever to evaluate (bm25, tfidf — no pre-built indexes; "
+            "vector/bge, hybrid_rrf/e5, etc. — run build_chunking_indexes.py)"
         ),
     ),
-    save: bool = typer.Option(
-        False, "--save", help="Сохранить детальные результаты в JSON"
-    ),
+    save: bool = typer.Option(False, "--save", help="Persist detailed results to JSON"),
 ) -> None:
     """
-    Поиск оптимальных параметров чанкинга (chunk_size × overlap).
+    Search for optimal chunking parameters (chunk_size × overlap).
     """
 
     is_sparse = retriever_name in ("bm25", "tfidf")
 
-    console.print("[dim]Загрузка документов...[/dim]")
+    console.print("[dim]Loading documents...[/dim]")
     documents = load_documents()
     dataset = load_dataset()
 
@@ -600,8 +586,8 @@ def chunking(
 
     pairs = [(cs, ov) for cs in chunk_sizes for ov in overlaps]
     console.print(
-        f"[bold]Проверка {len(pairs)} конфигураций чанкинга "
-        f"(ретривер: {retriever_name})[/bold]\n"
+        f"[bold]Evaluating {len(pairs)} chunking configurations "
+        f"(retriever: {retriever_name})[/bold]\n"
     )
 
     results: list[dict] = []
@@ -611,7 +597,7 @@ def chunking(
         console.print(f"[bold cyan]▶ {label}[/bold cyan]")
 
         nodes = parse_nodes_with_config(documents, chunk_size, overlap)
-        console.print(f"  Узлов: {len(nodes)}")
+        console.print(f"  Nodes: {len(nodes)}")
 
         if is_sparse:
             indexes: dict = {}
@@ -619,9 +605,9 @@ def chunking(
             try:
                 indexes = load_indexes_for_chunking(chunk_size, overlap, active_cfg)
             except RuntimeError as e:
-                console.print(f"[red]  Индекс не найден: {e}[/red]")
+                console.print(f"[red]  Index not found: {e}[/red]")
                 console.print(
-                    "[yellow]  Запустите: uv run scripts/build_chunking_indexes.py[/yellow]"
+                    "[yellow]  Run: uv run scripts/build_chunking_indexes.py[/yellow]"
                 )
                 continue
 
@@ -631,7 +617,7 @@ def chunking(
         retriever_configs = build_retrievers(
             indexes=indexes, nodes=nodes, embedding_configs=active_embedding_configs
         )
-        config = find_by_name(retriever_configs, retriever_name, "Ретривер")
+        config = find_by_name(retriever_configs, retriever_name, "Retriever")
 
         per_question, total_time = evaluate_dataset(
             retrieve_fn=lambda q, c=config: c.retrieve(query=q, top_k=top_k),

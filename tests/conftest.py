@@ -1,5 +1,5 @@
 """
-Фикстуры pytest: синтетические PDF-файлы для тестов без зависимости от корпуса.
+pytest fixtures: synthetic PDF files for tests that don't require the corpus.
 """
 
 from pathlib import Path
@@ -10,38 +10,39 @@ import pytest
 
 def _build_pdf(path: Path, pages: list[str], toc: list[list]) -> None:
     """
-    Создание PDF-файла с заданными страницами и оглавлением.
+    Create a PDF file with the given pages and table of contents.
 
     Parameters
     ----------
     path : Path
-        Путь для сохранения файла.
+        Path where the file is saved.
     pages : list[str]
-        Текст каждой страницы.
+        Text of each page.
     toc : list[list]
-        Оглавление в формате PyMuPDF: [[уровень, заголовок, страница], ...].
+        Table of contents in PyMuPDF format: ``[[level, title, page], ...]``.
     """
 
     doc = fitz.open()
+    try:
+        for content in pages:
+            page = doc.new_page()
+            page.insert_text((72, 72), content)
 
-    for content in pages:
-        page = doc.new_page()
-        page.insert_text((72, 72), content)
-
-    doc.set_toc(toc)
-    doc.save(str(path))
-    doc.close()
+        doc.set_toc(toc)
+        doc.save(str(path))
+    finally:
+        doc.close()
 
 
 @pytest.fixture
 def tiny_pdf(tmp_path: Path) -> Path:
     """
-    Одиночный PDF с двухуровневым оглавлением и вложенным подразделом.
+    Single PDF with a two-level table of contents and a nested subsection.
 
     Returns
     -------
     Path
-        Путь к созданному PDF-файлу.
+        Path to the created PDF file.
     """
 
     pdf_path = tmp_path / "sample.pdf"
@@ -68,12 +69,12 @@ def tiny_pdf(tmp_path: Path) -> Path:
 @pytest.fixture
 def corpus_dir(tmp_path: Path) -> Path:
     """
-    Директория с двумя PDF, каждый со своим оглавлением.
+    Directory containing two PDFs, each with its own table of contents.
 
     Returns
     -------
     Path
-        Путь к директории корпуса.
+        Path to the corpus directory.
     """
 
     corpus = tmp_path / "corpus"

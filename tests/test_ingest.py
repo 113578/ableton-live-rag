@@ -1,10 +1,10 @@
 """
-Тесты модуля ingest: очистка текста, свойства Section и загрузка документов.
+Tests for the ingest module: text cleaning, Section properties and document loading.
 """
 
 from pathlib import Path
 
-from ableton_live_rag.ingest import Section, clean_text, load_documents
+from ableton_rag.ingest import Section, clean_text, load_documents
 
 
 def test_clean_text_fixes_hyphenation_and_strips_page_numbers():

@@ -1,5 +1,5 @@
 """
-Судьи и метрики для оценки качества генерации.
+Judges and metrics for evaluating generation quality.
 """
 
 import asyncio
@@ -17,7 +17,7 @@ from llama_index.core.llms import LLM
 
 
 class LlamaIndexJudge(DeepEvalBaseLLM):
-    """Судья DeepEval на основе LlamaIndex LLM."""
+    """DeepEval judge backed by a LlamaIndex LLM."""
 
     def __init__(self, llm: LLM, name: str = "judge"):
         self._llm = llm
@@ -39,17 +39,17 @@ class LlamaIndexJudge(DeepEvalBaseLLM):
 
 def build_metrics(judge: DeepEvalBaseLLM) -> dict[str, BaseMetric]:
     """
-    Создание набора метрик для оценки генерации.
+    Create the metric set used to evaluate generation.
 
     Parameters
     ----------
     judge : DeepEvalBaseLLM
-        Модель-судья.
+        Judge model.
 
     Returns
     -------
     dict[str, BaseMetric]
-        Словарь ``{metric_key: metric}``.
+        Mapping ``{metric_key: metric}``.
     """
 
     return {
@@ -94,19 +94,19 @@ def build_metrics(judge: DeepEvalBaseLLM) -> dict[str, BaseMetric]:
 
 def measure(test_case: LLMTestCase, metrics: dict[str, BaseMetric]) -> dict[str, float]:
     """
-    Оценка одного тест-кейса по всем метрикам.
+    Evaluate a single test case across all metrics.
 
     Parameters
     ----------
     test_case : LLMTestCase
-        Тест-кейc.
+        Test case.
     metrics : dict[str, BaseMetric]
-        Метрики с ключами.
+        Metrics with their keys.
 
     Returns
     -------
     dict[str, float]
-        Словарь ``{metric_key: score}``.
+        Mapping ``{metric_key: score}``.
     """
 
     scores: dict[str, float] = {}
@@ -122,19 +122,19 @@ async def ameasure(
     test_case: LLMTestCase, metrics: dict[str, BaseMetric]
 ) -> dict[str, float]:
     """
-    Асинхронная оценка одного тест-кейса по всем метрикам (параллельно).
+    Asynchronously evaluate a single test case across all metrics in parallel.
 
     Parameters
     ----------
     test_case : LLMTestCase
-        Тест-кейс.
+        Test case.
     metrics : dict[str, BaseMetric]
-        Метрики с ключами.
+        Metrics with their keys.
 
     Returns
     -------
     dict[str, float]
-        Словарь ``{metric_key: score}``.
+        Mapping ``{metric_key: score}``.
     """
 
     await asyncio.gather(*[m.a_measure(test_case) for m in metrics.values()])
