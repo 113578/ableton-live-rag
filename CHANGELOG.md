@@ -2,6 +2,37 @@
 
 <!-- version list -->
 
+## v1.0.0 (2026-05-05)
+
+### Bug Fixes
+
+- Use only active generator ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+### Build System
+
+- Up time ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+- Update packages ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+### Chores
+
+- Rename ableton_live_rag to ableton_rag ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+### Documentation
+
+- Update readmes ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+### Refactoring
+
+- Deep code refactoring ([#28](https://github.com/113578/ableton-rag/pull/28),
+  [`5551bdb`](https://github.com/113578/ableton-rag/commit/5551bdb40a579703382dc19a4eb3068675056102))
+
+
 ## v0.9.0 (2026-05-04)
 
 ### Bug Fixes
